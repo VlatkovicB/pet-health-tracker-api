@@ -9,6 +9,7 @@ export function groupRoutes(): Router {
 
   router.get('/', authMiddleware, controller.list);
   router.post('/', authMiddleware, controller.create);
+  router.get('/:groupId', authMiddleware, controller.get);
   router.post('/:groupId/invite', authMiddleware, controller.invite);
   router.get('/:groupId/upcoming-vet-visits', authMiddleware, controller.upcomingVetVisits);
 

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Service } from 'typedi';
 import { CreateGroupUseCase } from '../../../application/group/CreateGroupUseCase';
+import { GetGroupUseCase } from '../../../application/group/GetGroupUseCase';
 import { InviteUserUseCase } from '../../../application/group/InviteUserUseCase';
 import { ListGroupsUseCase } from '../../../application/group/ListGroupsUseCase';
 import { ListUpcomingVetVisitsUseCase } from '../../../application/health/ListUpcomingVetVisitsUseCase';
@@ -11,12 +12,22 @@ import { VetVisitMapper } from '../../mappers/VetVisitMapper';
 export class GroupController {
   constructor(
     private readonly createGroup: CreateGroupUseCase,
+    private readonly getGroup: GetGroupUseCase,
     private readonly inviteUser: InviteUserUseCase,
     private readonly listGroups: ListGroupsUseCase,
     private readonly listUpcomingVetVisits: ListUpcomingVetVisitsUseCase,
     private readonly mapper: GroupMapper,
     private readonly vetVisitMapper: VetVisitMapper,
   ) {}
+
+  get = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const group = await this.getGroup.execute(req.params.groupId, req.auth.userId);
+      res.json(this.mapper.toResponse(group));
+    } catch (err) {
+      next(err);
+    }
+  };
 
   create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

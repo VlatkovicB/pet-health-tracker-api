@@ -5,6 +5,7 @@ import { AddVetVisitImageUseCase } from '../../../application/health/AddVetVisit
 import { UpdateVetVisitUseCase } from '../../../application/health/UpdateVetVisitUseCase';
 import { ListVetVisitsUseCase } from '../../../application/health/ListVetVisitsUseCase';
 import { LogMedicationUseCase } from '../../../application/health/LogMedicationUseCase';
+import { UpdateMedicationUseCase } from '../../../application/health/UpdateMedicationUseCase';
 import { ListMedicationsUseCase } from '../../../application/health/ListMedicationsUseCase';
 import { RecordSymptomUseCase } from '../../../application/health/RecordSymptomUseCase';
 import { ListSymptomsUseCase } from '../../../application/health/ListSymptomsUseCase';
@@ -23,6 +24,7 @@ export class HealthController {
     private readonly updateVetVisit: UpdateVetVisitUseCase,
     private readonly listVetVisits: ListVetVisitsUseCase,
     private readonly logMedication: LogMedicationUseCase,
+    private readonly updateMedication: UpdateMedicationUseCase,
     private readonly listMedications: ListMedicationsUseCase,
     private readonly recordSymptom: RecordSymptomUseCase,
     private readonly listSymptoms: ListSymptomsUseCase,
@@ -113,6 +115,26 @@ export class HealthController {
         requestingUserId: req.auth.userId,
       });
       res.status(201).json(this.medicationMapper.toResponse(medication));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updateMedicationHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const medication = await this.updateMedication.execute({
+        medicationId: req.params.medicationId,
+        name: req.body.name,
+        dosageAmount: req.body.dosageAmount,
+        dosageUnit: req.body.dosageUnit,
+        frequency: req.body.frequency,
+        startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
+        endDate: req.body.endDate === null ? null : req.body.endDate ? new Date(req.body.endDate) : undefined,
+        notes: req.body.notes !== undefined ? (req.body.notes || null) : undefined,
+        active: req.body.active,
+        requestingUserId: req.auth.userId,
+      });
+      res.json(this.medicationMapper.toResponse(medication));
     } catch (err) {
       next(err);
     }
