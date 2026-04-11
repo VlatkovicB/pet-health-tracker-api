@@ -8,6 +8,8 @@ import { VetVisitModel } from './models/VetVisitModel';
 import { MedicationModel } from './models/MedicationModel';
 import { SymptomModel } from './models/SymptomModel';
 import { HealthCheckModel } from './models/HealthCheckModel';
+import { ReminderModel } from './models/ReminderModel';
+import { ReminderNotifyUserModel } from './models/ReminderNotifyUserModel';
 
 export const sequelize = new Sequelize({
   dialect: 'postgres',
@@ -27,5 +29,7 @@ export const sequelize = new Sequelize({
     MedicationModel,
     SymptomModel,
     HealthCheckModel,
+    ReminderModel,
+    ReminderNotifyUserModel,
   ],
 });

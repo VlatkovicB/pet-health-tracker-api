@@ -3,7 +3,7 @@ import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../domain/h
 import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
 import { GroupRepository, GROUP_REPOSITORY } from '../../domain/group/GroupRepository';
 import { VetVisit } from '../../domain/health/VetVisit';
-import { ForbiddenError, NotFoundError } from '../../shared/errors/AppError';
+import { ForbiddenError, NotFoundError, ValidationError } from '../../shared/errors/AppError';
 
 interface AddVetVisitInput {
   petId: string;
@@ -26,6 +26,9 @@ export class AddVetVisitUseCase {
   ) {}
 
   async execute(input: AddVetVisitInput): Promise<VetVisit> {
+    if (!input.reason?.trim()) throw new ValidationError('Reason is required');
+    if (!input.visitDate) throw new ValidationError('Visit date is required');
+
     const pet = await this.petRepository.findById(input.petId);
     if (!pet) throw new NotFoundError('Pet');
 

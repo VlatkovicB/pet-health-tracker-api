@@ -1,40 +1,39 @@
 import { Service } from 'typedi';
 import { reminderQueue, ReminderJobData } from './ReminderQueue';
-import { Medication } from '../../domain/health/Medication';
-import { Pet } from '../../domain/pet/Pet';
+import { Reminder } from '../../domain/reminder/Reminder';
 
 @Service()
 export class ReminderSchedulerService {
-  async scheduleReminder(medication: Medication, pet: Pet): Promise<void> {
-    const { reminder } = medication;
-    if (!reminder || !reminder.enabled) return;
+  async scheduleReminder(
+    reminder: Reminder,
+    context: { petId: string; petName: string; medicationName: string; dosage: string },
+  ): Promise<void> {
+    if (!reminder.enabled) return;
 
-    await this.cancelReminders(medication.id.toValue());
+    await this.cancelReminders(reminder.entityId);
 
-    const cronExpressions = reminder.schedule.toCronExpressions();
     const jobData: ReminderJobData = {
-      medicationId: medication.id.toValue(),
-      medicationName: medication.name,
-      dosage: medication.dosage.toString(),
-      petId: pet.id.toValue(),
-      petName: pet.name,
+      reminderId: reminder.id.toValue(),
+      medicationId: reminder.entityId,
+      medicationName: context.medicationName,
+      dosage: context.dosage,
+      petId: context.petId,
+      petName: context.petName,
       notifyUserIds: reminder.notifyUserIds,
     };
 
-    for (const pattern of cronExpressions) {
-      const jobName = `reminder:${medication.id.toValue()}:${pattern}`;
-      await reminderQueue.add(jobName, jobData, {
-        repeat: { pattern, tz: reminder.schedule.timezone },
-        jobId: jobName,
-      });
-    }
+    const jobName = `reminder:${reminder.entityId}`;
+    await reminderQueue.add(jobName, jobData, {
+      repeat: { every: reminder.schedule.toMilliseconds() },
+      jobId: jobName,
+    });
   }
 
-  async cancelReminders(medicationId: string): Promise<void> {
+  async cancelReminders(entityId: string): Promise<void> {
     const repeatableJobs = await reminderQueue.getRepeatableJobs();
     await Promise.all(
       repeatableJobs
-        .filter((job) => job.name.startsWith(`reminder:${medicationId}:`))
+        .filter((job) => job.name === `reminder:${entityId}`)
         .map((job) => reminderQueue.removeRepeatableByKey(job.key)),
     );
   }

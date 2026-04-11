@@ -3,7 +3,9 @@ import { Service } from 'typedi';
 import { CreateGroupUseCase } from '../../../application/group/CreateGroupUseCase';
 import { InviteUserUseCase } from '../../../application/group/InviteUserUseCase';
 import { ListGroupsUseCase } from '../../../application/group/ListGroupsUseCase';
+import { ListUpcomingVetVisitsUseCase } from '../../../application/health/ListUpcomingVetVisitsUseCase';
 import { GroupMapper } from '../../mappers/GroupMapper';
+import { VetVisitMapper } from '../../mappers/VetVisitMapper';
 
 @Service()
 export class GroupController {
@@ -11,7 +13,9 @@ export class GroupController {
     private readonly createGroup: CreateGroupUseCase,
     private readonly inviteUser: InviteUserUseCase,
     private readonly listGroups: ListGroupsUseCase,
+    private readonly listUpcomingVetVisits: ListUpcomingVetVisitsUseCase,
     private readonly mapper: GroupMapper,
+    private readonly vetVisitMapper: VetVisitMapper,
   ) {}
 
   create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -45,6 +49,15 @@ export class GroupController {
         inviteeEmail: req.body.email,
       });
       res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  upcomingVetVisits = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const visits = await this.listUpcomingVetVisits.execute(req.params.groupId, req.auth.userId);
+      res.json(visits.map((v) => this.vetVisitMapper.toResponse(v)));
     } catch (err) {
       next(err);
     }

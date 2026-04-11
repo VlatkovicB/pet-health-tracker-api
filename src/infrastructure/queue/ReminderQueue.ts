@@ -2,6 +2,7 @@ import { Queue } from 'bullmq';
 import { redis } from './redis';
 
 export interface ReminderJobData {
+  reminderId: string;
   medicationId: string;
   medicationName: string;
   dosage: string;

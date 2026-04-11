@@ -1,8 +1,10 @@
 import { Service } from 'typedi';
+import { Op } from 'sequelize';
 import { VetVisitModel } from '../models/VetVisitModel';
 import { MedicationModel } from '../models/MedicationModel';
 import { SymptomModel } from '../models/SymptomModel';
 import { HealthCheckModel } from '../models/HealthCheckModel';
+import { PetModel } from '../models/PetModel';
 import { HealthRecordRepository } from '../../../domain/health/HealthRecordRepository';
 import { VetVisit } from '../../../domain/health/VetVisit';
 import { Medication } from '../../../domain/health/Medication';
@@ -47,6 +49,15 @@ export class SequelizeHealthRecordRepository implements HealthRecordRepository {
       offset: (page - 1) * limit,
     });
     return toResult(rows.map((m) => this.vetVisitMapper.toDomain(m)), count, page, limit);
+  }
+
+  async findUpcomingVetVisitsByGroupId(groupId: string): Promise<VetVisit[]> {
+    const rows = await VetVisitModel.findAll({
+      where: { nextVisitDate: { [Op.gt]: new Date() } },
+      include: [{ model: PetModel, where: { groupId }, required: true }],
+      order: [['next_visit_date', 'ASC']],
+    });
+    return rows.map((m) => this.vetVisitMapper.toDomain(m));
   }
 
   async saveVetVisit(visit: VetVisit): Promise<void> {

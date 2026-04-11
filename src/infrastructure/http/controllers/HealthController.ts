@@ -5,6 +5,7 @@ import { AddVetVisitImageUseCase } from '../../../application/health/AddVetVisit
 import { UpdateVetVisitUseCase } from '../../../application/health/UpdateVetVisitUseCase';
 import { ListVetVisitsUseCase } from '../../../application/health/ListVetVisitsUseCase';
 import { LogMedicationUseCase } from '../../../application/health/LogMedicationUseCase';
+import { ListMedicationsUseCase } from '../../../application/health/ListMedicationsUseCase';
 import { RecordSymptomUseCase } from '../../../application/health/RecordSymptomUseCase';
 import { ListSymptomsUseCase } from '../../../application/health/ListSymptomsUseCase';
 import { AddHealthCheckUseCase } from '../../../application/health/AddHealthCheckUseCase';
@@ -22,6 +23,7 @@ export class HealthController {
     private readonly updateVetVisit: UpdateVetVisitUseCase,
     private readonly listVetVisits: ListVetVisitsUseCase,
     private readonly logMedication: LogMedicationUseCase,
+    private readonly listMedications: ListMedicationsUseCase,
     private readonly recordSymptom: RecordSymptomUseCase,
     private readonly listSymptoms: ListSymptomsUseCase,
     private readonly addHealthCheck: AddHealthCheckUseCase,
@@ -88,13 +90,26 @@ export class HealthController {
     }
   };
 
+  getMedications = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const medications = await this.listMedications.execute(req.params.petId, req.auth.userId);
+      res.json(medications.map((m) => this.medicationMapper.toResponse(m)));
+    } catch (err) {
+      next(err);
+    }
+  };
+
   createMedication = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const medication = await this.logMedication.execute({
-        ...req.body,
         petId: req.params.petId,
+        name: req.body.name,
+        dosageAmount: req.body.dosageAmount,
+        dosageUnit: req.body.dosageUnit,
+        frequency: req.body.frequency,
         startDate: new Date(req.body.startDate),
         endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
+        notes: req.body.notes,
         requestingUserId: req.auth.userId,
       });
       res.status(201).json(this.medicationMapper.toResponse(medication));

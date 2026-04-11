@@ -2,16 +2,16 @@ import { Inject, Service } from 'typedi';
 import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../domain/health/HealthRecordRepository';
 import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
 import { GroupRepository, GROUP_REPOSITORY } from '../../domain/group/GroupRepository';
-import { ReminderSchedule, DayOfWeek } from '../../domain/health/value-objects/ReminderSchedule';
+import { ReminderRepository, REMINDER_REPOSITORY } from '../../domain/reminder/ReminderRepository';
+import { Reminder } from '../../domain/reminder/Reminder';
+import { FrequencySchedule, FrequencyType } from '../../domain/health/value-objects/FrequencySchedule';
 import { ForbiddenError, NotFoundError } from '../../shared/errors/AppError';
 import { ReminderSchedulerService } from '../../infrastructure/queue/ReminderSchedulerService';
 
 interface ConfigureReminderInput {
   medicationId: string;
-  times?: string[];
-  intervalHours?: number;
-  days?: DayOfWeek[];
-  timezone: string;
+  frequencyType: FrequencyType;
+  frequencyInterval: number;
   notifyUserIds: string[];
   enabled: boolean;
   requestingUserId: string;
@@ -23,6 +23,7 @@ export class ConfigureMedicationReminderUseCase {
     @Inject(HEALTH_RECORD_REPOSITORY) private readonly healthRepo: HealthRecordRepository,
     @Inject(PET_REPOSITORY) private readonly petRepository: PetRepository,
     @Inject(GROUP_REPOSITORY) private readonly groupRepository: GroupRepository,
+    @Inject(REMINDER_REPOSITORY) private readonly reminderRepo: ReminderRepository,
     private readonly reminderScheduler: ReminderSchedulerService,
   ) {}
 
@@ -36,25 +37,39 @@ export class ConfigureMedicationReminderUseCase {
     const group = await this.groupRepository.findById(pet.groupId);
     if (!group?.hasMember(input.requestingUserId)) throw new ForbiddenError('Not a group member');
 
-    const schedule = ReminderSchedule.create({
-      times: input.times,
-      intervalHours: input.intervalHours,
-      days: input.days,
-      timezone: input.timezone,
+    const schedule = FrequencySchedule.create({
+      type: input.frequencyType,
+      interval: input.frequencyInterval,
     });
 
-    medication.configureReminder({
-      schedule,
-      enabled: input.enabled,
-      notifyUserIds: input.notifyUserIds,
-    });
+    const existing = await this.reminderRepo.findByEntityId(input.medicationId);
 
-    await this.healthRepo.saveMedication(medication);
+    let reminder: Reminder;
+    if (existing) {
+      existing.toggle(input.enabled);
+      reminder = existing;
+    } else {
+      reminder = Reminder.create({
+        entityType: 'medication',
+        entityId: input.medicationId,
+        schedule,
+        enabled: input.enabled,
+        notifyUserIds: input.notifyUserIds,
+        createdBy: input.requestingUserId,
+      });
+    }
+
+    await this.reminderRepo.save(reminder);
 
     if (input.enabled) {
-      await this.reminderScheduler.scheduleReminder(medication, pet);
+      await this.reminderScheduler.scheduleReminder(reminder, {
+        petId: pet.id.toValue(),
+        petName: pet.name,
+        medicationName: medication.name,
+        dosage: medication.dosage.toString(),
+      });
     } else {
-      await this.reminderScheduler.cancelReminders(medication.id.toValue());
+      await this.reminderScheduler.cancelReminders(input.medicationId);
     }
   }
 }

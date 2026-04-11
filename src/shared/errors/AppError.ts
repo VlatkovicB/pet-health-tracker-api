@@ -29,3 +29,10 @@ export class ForbiddenError extends AppError {
     this.name = 'ForbiddenError';
   }
 }
+
+export class ValidationError extends AppError {
+  constructor(message: string) {
+    super(message, 400);
+    this.name = 'ValidationError';
+  }
+}

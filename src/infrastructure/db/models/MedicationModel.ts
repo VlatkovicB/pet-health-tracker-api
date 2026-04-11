@@ -20,8 +20,11 @@ export class MedicationModel extends Model {
   @Column({ type: DataType.STRING, allowNull: false, field: 'dosage_unit' })
   declare dosageUnit: string;
 
-  @Column({ type: DataType.STRING, allowNull: false })
-  declare frequency: string;
+  @Column({ type: DataType.STRING, allowNull: false, field: 'frequency_type' })
+  declare frequencyType: string;
+
+  @Column({ type: DataType.INTEGER, allowNull: false, field: 'frequency_interval' })
+  declare frequencyInterval: number;
 
   @Column({ type: DataType.DATE, allowNull: false, field: 'start_date' })
   declare startDate: Date;
@@ -35,9 +38,6 @@ export class MedicationModel extends Model {
   @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: true })
   declare active: boolean;
 
-  /** Stored as JSON: { schedule: ReminderScheduleProps, enabled: boolean, notifyUserIds: string[] } */
-  @Column({ type: DataType.JSONB, allowNull: true })
-  declare reminder: object | null;
 
   @Column({ type: DataType.UUID, allowNull: false, field: 'created_by' })
   declare createdBy: string;
