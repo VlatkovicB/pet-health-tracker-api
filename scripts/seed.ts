@@ -229,7 +229,7 @@ async function main() {
   await sequelize.authenticate();
   console.log('Connected to database.');
 
-  await sequelize.sync({ force: false });
+  await sequelize.sync({ force: true });
   console.log('Schema synced.');
 
   // ── full truncate ─────────────────────────────────────────────────────────
