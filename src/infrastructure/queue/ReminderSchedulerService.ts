@@ -3,7 +3,7 @@ import { notificationQueue, MedicationReminderJobData, VetVisitReminderJobData }
 import { Reminder } from '../../domain/reminder/Reminder';
 
 const VET_VISIT_JOB_PREFIX = 'vet-visit-reminder--';
-const DEFAULT_LEAD_TIME_MS = 24 * 60 * 60 * 1000; // 24 hours before visit
+const DEFAULT_LEAD_TIME_MS = 24 * 60 * 60 * 1000;
 
 export interface VetVisitReminderContext {
   visitId: string;
@@ -18,7 +18,7 @@ export interface VetVisitReminderContext {
 
 @Service()
 export class ReminderSchedulerService {
-  // ── Medication reminders (repeating interval) ──────────────────────────────
+  // ── Medication reminders (cron-based repeating) ────────────────────────────
 
   async scheduleReminder(
     reminder: Reminder,
@@ -37,19 +37,25 @@ export class ReminderSchedulerService {
       notifyUserIds: reminder.notifyUserIds,
     };
 
-    const jobName = `reminder--${reminder.entityId}`;
-    await notificationQueue.add(jobName, jobData, {
-      repeat: { every: reminder.schedule.toMilliseconds() },
-      jobId: jobName,
-    });
+    const cronExpressions = reminder.schedule.toCronExpressions();
+    await Promise.all(
+      cronExpressions.map((pattern, index) =>
+        notificationQueue.upsertJobScheduler(
+          `reminder--${reminder.entityId}--${index}`,
+          { pattern, tz: 'UTC' },
+          { name: `reminder--${reminder.entityId}`, data: jobData },
+        ),
+      ),
+    );
   }
 
   async cancelReminders(entityId: string): Promise<void> {
-    const repeatableJobs = await notificationQueue.getRepeatableJobs();
+    const prefix = `reminder--${entityId}--`;
+    const schedulers = await notificationQueue.getJobSchedulers();
     await Promise.all(
-      repeatableJobs
-        .filter((job) => job.name === `reminder--${entityId}`)
-        .map((job) => notificationQueue.removeRepeatableByKey(job.key)),
+      schedulers
+        .filter((s) => s.id?.startsWith(prefix))
+        .map((s) => notificationQueue.removeJobScheduler(s.id!)),
     );
   }
 
