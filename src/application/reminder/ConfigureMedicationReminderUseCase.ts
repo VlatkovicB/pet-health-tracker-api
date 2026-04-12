@@ -3,14 +3,13 @@ import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../domain/h
 import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
 import { ReminderRepository, REMINDER_REPOSITORY } from '../../domain/reminder/ReminderRepository';
 import { Reminder } from '../../domain/reminder/Reminder';
-import { FrequencySchedule, FrequencyType } from '../../domain/health/value-objects/FrequencySchedule';
+import { ReminderSchedule, ReminderScheduleProps } from '../../domain/health/value-objects/ReminderSchedule';
 import { ForbiddenError, NotFoundError } from '../../shared/errors/AppError';
 import { ReminderSchedulerService } from '../../infrastructure/queue/ReminderSchedulerService';
 
 interface ConfigureReminderInput {
   medicationId: string;
-  frequencyType: FrequencyType;
-  frequencyInterval: number;
+  schedule: ReminderScheduleProps;
   enabled: boolean;
   requestingUserId: string;
 }
@@ -32,15 +31,13 @@ export class ConfigureMedicationReminderUseCase {
     if (!pet) throw new NotFoundError('Pet');
     if (pet.userId !== input.requestingUserId) throw new ForbiddenError('Not your pet');
 
-    const schedule = FrequencySchedule.create({
-      type: input.frequencyType,
-      interval: input.frequencyInterval,
-    });
+    const schedule = ReminderSchedule.create(input.schedule);
 
     const existing = await this.reminderRepo.findByEntityId(input.medicationId);
 
     let reminder: Reminder;
     if (existing) {
+      existing.updateSchedule(schedule);
       existing.toggle(input.enabled);
       reminder = existing;
     } else {
