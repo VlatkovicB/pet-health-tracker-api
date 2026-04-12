@@ -21,7 +21,7 @@ REST API for tracking pet health records across a shared group of users.
 - **Pets** — group-scoped pet profiles with photo upload
 - **Vets** — group-scoped vet directory (name, address, phone, hours, maps link)
 - **Vet visits** — create, update, attach photos; optional next-visit scheduling
-- **Medications** — log medications with dosage; configurable reminders via BullMQ
+- **Medications** — log medications with dosage; configurable reminders via BullMQ with precise daily/weekly/monthly schedules (exact times and days)
 
 ## API Routes
 

@@ -67,7 +67,7 @@ src/
 ### Value Objects
 - `Dosage` — amount + unit
 - `Severity` — mild | moderate | severe
-- `ReminderSchedule` — times[], intervalHours?, days?, timezone; `toCronExpressions()` for BullMQ
+- `ReminderSchedule` — discriminated union: `daily` (times[]), `weekly` (days[], times[]), `monthly` (daysOfMonth[], times[]); UTC; `toCronExpressions()` returns one cron string per time slot
 
 ### Base Classes (`domain/shared/`)
 - `Entity<T>` — wraps `props: T`, protected; holds `UniqueEntityId`
@@ -126,6 +126,7 @@ One Sequelize model per DB table. All use `timestamps: false` with explicit `cre
 | `PetModel` | `pets` | name, species, breed, birth_date, photo_url, group_id |
 | `VetModel` | `vets` | name, address, phone, work_hours, google_maps_url, group_id |
 | `VetVisitModel` | `vet_visits` | pet_id, vet_id, visit_date, next_visit_date, image_urls (JSONB) |
+| `ReminderModel` | `reminders` | entity_type, entity_id, schedule (JSONB), enabled, created_by |
 | `MedicationModel` | `medications` | name, dosage (JSONB), reminder (JSONB), active |
 | `SymptomModel` | `symptoms` | description, severity, observed_at |
 | `HealthCheckModel` | `health_checks` | weight, temperature, checked_at |
@@ -164,7 +165,7 @@ Mappers: `UserMapper`, `GroupMapper`, `PetMapper`, `VetMapper`, `VetVisitMapper`
 
 ### Queue (`infrastructure/queue/`)
 - `ReminderQueue` — BullMQ queue instance
-- `ReminderSchedulerService` — creates/removes repeatable BullMQ jobs keyed as `reminder:{medicationId}:{cron}` from `ReminderSchedule.toCronExpressions()`
+- `ReminderSchedulerService` — registers one `upsertJobScheduler` entry per cron expression from `ReminderSchedule.toCronExpressions()`; scheduler IDs are `reminder--{entityId}--{index}`; cancellation removes all entries matching the entity prefix
 - `ReminderWorker` — processes jobs; looks up `notifyUserIds`, sends email per user via `EmailService`
 - `redis.ts` — shared Redis connection
 
@@ -212,5 +213,5 @@ PATCH  /api/v1/medications/:medicationId/reminder/toggle
 - **Protected `props`** — `Entity.props` is `protected`; use cases reconstruct entities via public getters, never by spreading `props` directly.
 - **Injectable mappers** — mappers are `@Service()` instances injected via constructor, not static classes. This keeps them testable and avoids hidden global state.
 - **BullMQ over cron** — reminder jobs survive restarts; repeatable jobs are keyed by medication + cron expression so schedule changes cleanly replace old jobs.
-- **`sync({ alter: true })`** — DB schema is kept in sync by Sequelize on startup; no migration files. Suitable for early-stage development.
+- **`sync({ alter: true })`** — DB schema is kept in sync by Sequelize on startup; no migration files. Run `pnpm seed` (uses `force: true`) to drop and recreate all tables with fresh data during development.
 - **Flat uploads directory** — uploaded files are served statically from `/uploads`; URLs are stored as relative paths (e.g. `/uploads/pets/uuid.jpg`) so the server URL can change without a DB migration.
