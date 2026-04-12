@@ -1,4 +1,5 @@
 import { ValueObject } from '../../shared/ValueObject';
+import { ValidationError } from '../../../shared/errors/AppError';
 
 export type DayOfWeek = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';
 
@@ -15,12 +16,12 @@ export type ReminderScheduleProps = DailySchedule | WeeklySchedule | MonthlySche
 function validateTimes(times: string[]): void {
   // Deduplicate times to prevent duplicate schedulers
   const uniqueTimes = Array.from(new Set(times));
-  if (!uniqueTimes.length) throw new Error('times must not be empty');
+  if (!uniqueTimes.length) throw new ValidationError('times must not be empty');
   for (const t of uniqueTimes) {
-    if (!/^\d{2}:\d{2}$/.test(t)) throw new Error(`Invalid time format: ${t}`);
+    if (!/^\d{2}:\d{2}$/.test(t)) throw new ValidationError(`Invalid time format: ${t}`);
     const [h, m] = t.split(':').map(Number);
-    if (h < 0 || h > 23) throw new Error(`Invalid hour: ${h}`);
-    if (m < 0 || m > 59) throw new Error(`Invalid minute: ${m}`);
+    if (h < 0 || h > 23) throw new ValidationError(`Invalid hour: ${h}`);
+    if (m < 0 || m > 59) throw new ValidationError(`Invalid minute: ${m}`);
   }
 }
 
@@ -63,19 +64,19 @@ export class ReminderSchedule extends ValueObject<ReminderScheduleProps> {
         });
       }
       default:
-        throw new Error(`Unknown schedule type: ${(p as any).type}`);
+        throw new ValidationError(`Unknown schedule type: ${(p as any).type}`);
     }
   }
 
   static create(props: ReminderScheduleProps): ReminderSchedule {
     validateTimes(props.times);
     if (props.type === 'weekly') {
-      if (!props.days.length) throw new Error('weekly schedule requires at least one day');
+      if (!props.days.length) throw new ValidationError('weekly schedule requires at least one day');
     }
     if (props.type === 'monthly') {
-      if (!props.daysOfMonth.length) throw new Error('monthly schedule requires at least one day of month');
+      if (!props.daysOfMonth.length) throw new ValidationError('monthly schedule requires at least one day of month');
       for (const d of props.daysOfMonth) {
-        if (d < 1 || d > 31) throw new Error(`Invalid day of month: ${d}`);
+        if (d < 1 || d > 31) throw new ValidationError(`Invalid day of month: ${d}`);
       }
     }
     return new ReminderSchedule(props);
