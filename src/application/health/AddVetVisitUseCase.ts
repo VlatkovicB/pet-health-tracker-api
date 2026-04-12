@@ -4,6 +4,7 @@ import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
 import { GroupRepository, GROUP_REPOSITORY } from '../../domain/group/GroupRepository';
 import { VetVisit } from '../../domain/health/VetVisit';
 import { ForbiddenError, NotFoundError, ValidationError } from '../../shared/errors/AppError';
+import { ReminderSchedulerService } from '../../infrastructure/queue/ReminderSchedulerService';
 
 interface AddVetVisitInput {
   petId: string;
@@ -23,6 +24,7 @@ export class AddVetVisitUseCase {
     @Inject(HEALTH_RECORD_REPOSITORY) private readonly healthRepo: HealthRecordRepository,
     @Inject(PET_REPOSITORY) private readonly petRepository: PetRepository,
     @Inject(GROUP_REPOSITORY) private readonly groupRepository: GroupRepository,
+    private readonly reminderScheduler: ReminderSchedulerService,
   ) {}
 
   async execute(input: AddVetVisitInput): Promise<VetVisit> {
@@ -48,6 +50,19 @@ export class AddVetVisitUseCase {
     });
 
     await this.healthRepo.saveVetVisit(visit);
+
+    if (input.nextVisitDate) {
+      await this.reminderScheduler.scheduleVetVisitReminder({
+        visitId: visit.id.toValue(),
+        petName: pet.name,
+        reason: input.reason,
+        nextVisitDate: input.nextVisitDate,
+        vetName: input.vetName,
+        clinic: input.clinic,
+        notifyUserIds: group.members.map((m) => m.userId),
+      });
+    }
+
     return visit;
   }
 }

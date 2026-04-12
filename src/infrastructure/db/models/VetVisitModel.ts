@@ -29,9 +29,6 @@ export class VetVisitModel extends Model {
   declare reason: string;
 
   @Column({ type: DataType.TEXT, allowNull: true })
-  declare diagnosis: string | null;
-
-  @Column({ type: DataType.TEXT, allowNull: true })
   declare notes: string | null;
 
   @Column({ type: DataType.JSONB, allowNull: false, defaultValue: [], field: 'image_urls' })

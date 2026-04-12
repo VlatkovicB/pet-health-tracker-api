@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import { sequelize } from './infrastructure/db/database';
 import { registerDependencies } from './container';
 import { createApp } from './app';
-import { ReminderWorker } from './infrastructure/queue/ReminderWorker';
+import { NotificationWorker } from './infrastructure/queue/NotificationWorker';
 import { EmailService } from './infrastructure/email/EmailService';
 import { SequelizeUserRepository } from './infrastructure/db/repositories/SequelizeUserRepository';
 import { Container } from 'typedi';
@@ -15,11 +15,11 @@ async function main(): Promise<void> {
   await sequelize.sync({ alter: true });
   console.log('Database connected');
 
-  // Start BullMQ reminder worker
+  // Start BullMQ notification worker
   const emailService = Container.get(EmailService);
   const userRepository = Container.get(SequelizeUserRepository);
-  new ReminderWorker(emailService, userRepository);
-  console.log('Reminder worker started');
+  new NotificationWorker(emailService, userRepository);
+  console.log('Notification worker started');
 
   const app = createApp();
   const port = process.env.PORT ?? 3000;

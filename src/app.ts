@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { buildRouter } from './infrastructure/http/routes';
+import { devRoutes } from './infrastructure/http/routes/devRoutes';
 import { errorMiddleware } from './infrastructure/http/middleware/errorMiddleware';
 
 export function createApp(): express.Application {
@@ -13,6 +14,11 @@ export function createApp(): express.Application {
 
   app.get('/health', (_req, res) => res.json({ status: 'ok' }));
   app.use('/api/v1', buildRouter());
+
+  if (process.env.NODE_ENV !== 'production') {
+    app.use('/api/v1/dev', devRoutes());
+  }
+
   app.use(errorMiddleware);
 
   return app;
