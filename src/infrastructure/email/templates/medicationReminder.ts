@@ -34,7 +34,7 @@ export function medicationReminderHtml(ctx: MedicationReminderContext): string {
       </div>
 
       <p style="font-size: 12px; color: #9ca3af; border-top: 1px solid #f3f4f6; padding-top: 16px;">
-        Sent by Pet Health Tracker · You are receiving this because you are a group member.
+        Sent by Pet Health Tracker · You are receiving this because you have a scheduled reminder set up in Pet Health Tracker.
       </p>
     </div>
   `;
