@@ -1,5 +1,6 @@
 import { Column, DataType, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript';
 import { ReminderNotifyUserModel } from './ReminderNotifyUserModel';
+import { ReminderScheduleProps } from '../../../domain/health/value-objects/ReminderSchedule';
 
 @Table({ tableName: 'reminders', timestamps: false })
 export class ReminderModel extends Model {
@@ -13,11 +14,8 @@ export class ReminderModel extends Model {
   @Column({ type: DataType.UUID, allowNull: false, field: 'entity_id' })
   declare entityId: string;
 
-  @Column({ type: DataType.STRING, allowNull: false, field: 'schedule_type' })
-  declare scheduleType: string;
-
-  @Column({ type: DataType.INTEGER, allowNull: false, field: 'schedule_interval' })
-  declare scheduleInterval: number;
+  @Column({ type: DataType.JSONB, allowNull: false })
+  declare schedule: ReminderScheduleProps;
 
   @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: true })
   declare enabled: boolean;
