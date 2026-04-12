@@ -14,9 +14,9 @@ export class SequelizePetRepository implements PetRepository {
     return model ? this.mapper.toDomain(model) : null;
   }
 
-  async findByGroupId(groupId: string, { page, limit }: PaginationParams): Promise<PaginatedResult<Pet>> {
+  async findByUserId(userId: string, { page, limit }: PaginationParams): Promise<PaginatedResult<Pet>> {
     const { count, rows } = await PetModel.findAndCountAll({
-      where: { groupId },
+      where: { userId },
       limit,
       offset: (page - 1) * limit,
     });

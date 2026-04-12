@@ -1,7 +1,7 @@
 import { Service } from 'typedi';
 import { UserModel } from '../models/UserModel';
 import { UserRepository } from '../../../domain/user/UserRepository';
-import { User } from '../../../domain/user/User';
+import { User, ThemeMode } from '../../../domain/user/User';
 import { UserMapper } from '../../mappers/UserMapper';
 
 @Service()
@@ -25,5 +25,9 @@ export class SequelizeUserRepository implements UserRepository {
 
   async save(user: User): Promise<void> {
     await UserModel.upsert(this.mapper.toPersistence(user) as any);
+  }
+
+  async updateTheme(userId: string, theme: ThemeMode): Promise<void> {
+    await UserModel.update({ theme }, { where: { id: userId } });
   }
 }

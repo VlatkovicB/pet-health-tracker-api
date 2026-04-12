@@ -1,7 +1,6 @@
 import { Inject, Service } from 'typedi';
 import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../domain/health/HealthRecordRepository';
 import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
-import { GroupRepository, GROUP_REPOSITORY } from '../../domain/group/GroupRepository';
 import { VetVisit } from '../../domain/health/VetVisit';
 import { ForbiddenError, NotFoundError, ValidationError } from '../../shared/errors/AppError';
 import { ReminderSchedulerService } from '../../infrastructure/queue/ReminderSchedulerService';
@@ -23,7 +22,6 @@ export class AddVetVisitUseCase {
   constructor(
     @Inject(HEALTH_RECORD_REPOSITORY) private readonly healthRepo: HealthRecordRepository,
     @Inject(PET_REPOSITORY) private readonly petRepository: PetRepository,
-    @Inject(GROUP_REPOSITORY) private readonly groupRepository: GroupRepository,
     private readonly reminderScheduler: ReminderSchedulerService,
   ) {}
 
@@ -33,9 +31,7 @@ export class AddVetVisitUseCase {
 
     const pet = await this.petRepository.findById(input.petId);
     if (!pet) throw new NotFoundError('Pet');
-
-    const group = await this.groupRepository.findById(pet.groupId);
-    if (!group?.hasMember(input.requestingUserId)) throw new ForbiddenError('Not a group member');
+    if (pet.userId !== input.requestingUserId) throw new ForbiddenError('Not your pet');
 
     const visit = VetVisit.create({
       petId: input.petId,
@@ -59,7 +55,7 @@ export class AddVetVisitUseCase {
         nextVisitDate: input.nextVisitDate,
         vetName: input.vetName,
         clinic: input.clinic,
-        notifyUserIds: group.members.map((m) => m.userId),
+        notifyUserIds: [input.requestingUserId],
       });
     }
 

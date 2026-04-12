@@ -3,7 +3,7 @@ import { PaginationParams, PaginatedResult } from '../../shared/types/Pagination
 
 export interface PetRepository {
   findById(id: string): Promise<Pet | null>;
-  findByGroupId(groupId: string, pagination: PaginationParams): Promise<PaginatedResult<Pet>>;
+  findByUserId(userId: string, pagination: PaginationParams): Promise<PaginatedResult<Pet>>;
   save(pet: Pet): Promise<void>;
   delete(id: string): Promise<void>;
 }

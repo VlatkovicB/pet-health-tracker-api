@@ -16,7 +16,7 @@ export class VetController {
     try {
       const page = Math.max(1, parseInt(req.query.page as string) || 1);
       const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
-      const result = await this.listVets.execute(req.params.groupId, req.auth.userId, { page, limit });
+      const result = await this.listVets.execute(req.auth.userId, { page, limit });
       res.json({ ...result, items: result.items.map((v) => this.mapper.toResponse(v)) });
     } catch (err) {
       next(err);
@@ -27,7 +27,6 @@ export class VetController {
     try {
       const vet = await this.createVet.execute({
         ...req.body,
-        groupId: req.params.groupId,
         requestingUserId: req.auth.userId,
       });
       res.status(201).json(this.mapper.toResponse(vet));

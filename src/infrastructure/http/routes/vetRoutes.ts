@@ -4,7 +4,7 @@ import { VetController } from '../controllers/VetController';
 import { authMiddleware } from '../middleware/authMiddleware';
 
 export function vetRoutes(): Router {
-  const router = Router({ mergeParams: true });
+  const router = Router();
   const controller = Container.get(VetController);
 
   router.get('/', authMiddleware, controller.list);

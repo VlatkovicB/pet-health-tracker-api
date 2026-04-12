@@ -7,14 +7,10 @@ import { ListVetVisitsUseCase } from '../../../application/health/ListVetVisitsU
 import { LogMedicationUseCase } from '../../../application/health/LogMedicationUseCase';
 import { UpdateMedicationUseCase } from '../../../application/health/UpdateMedicationUseCase';
 import { ListMedicationsUseCase } from '../../../application/health/ListMedicationsUseCase';
-import { RecordSymptomUseCase } from '../../../application/health/RecordSymptomUseCase';
-import { ListSymptomsUseCase } from '../../../application/health/ListSymptomsUseCase';
-import { AddHealthCheckUseCase } from '../../../application/health/AddHealthCheckUseCase';
-import { ListHealthChecksUseCase } from '../../../application/health/ListHealthChecksUseCase';
 import { VetVisitMapper } from '../../mappers/VetVisitMapper';
 import { MedicationMapper } from '../../mappers/MedicationMapper';
-import { SymptomMapper } from '../../mappers/SymptomMapper';
-import { HealthCheckMapper } from '../../mappers/HealthCheckMapper';
+import { Inject } from 'typedi';
+import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../../domain/health/HealthRecordRepository';
 
 @Service()
 export class HealthController {
@@ -26,14 +22,9 @@ export class HealthController {
     private readonly logMedication: LogMedicationUseCase,
     private readonly updateMedication: UpdateMedicationUseCase,
     private readonly listMedications: ListMedicationsUseCase,
-    private readonly recordSymptom: RecordSymptomUseCase,
-    private readonly listSymptoms: ListSymptomsUseCase,
-    private readonly addHealthCheck: AddHealthCheckUseCase,
-    private readonly listHealthChecks: ListHealthChecksUseCase,
     private readonly vetVisitMapper: VetVisitMapper,
     private readonly medicationMapper: MedicationMapper,
-    private readonly symptomMapper: SymptomMapper,
-    private readonly healthCheckMapper: HealthCheckMapper,
+    @Inject(HEALTH_RECORD_REPOSITORY) private readonly healthRepo: HealthRecordRepository,
   ) {}
 
   getVetVisits = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -92,6 +83,15 @@ export class HealthController {
     }
   };
 
+  getUpcomingVetVisits = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const visits = await this.healthRepo.findUpcomingVetVisitsByUserId(req.auth.userId);
+      res.json(visits.map((v) => this.vetVisitMapper.toResponse(v)));
+    } catch (err) {
+      next(err);
+    }
+  };
+
   getMedications = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const medications = await this.listMedications.execute(req.params.petId, req.auth.userId);
@@ -135,56 +135,6 @@ export class HealthController {
         requestingUserId: req.auth.userId,
       });
       res.json(this.medicationMapper.toResponse(medication));
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  getSymptoms = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const page = Math.max(1, parseInt(req.query.page as string) || 1);
-      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
-      const result = await this.listSymptoms.execute(req.params.petId, req.auth.userId, { page, limit });
-      res.json({ ...result, items: result.items.map((s) => this.symptomMapper.toResponse(s)) });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  createSymptom = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const symptom = await this.recordSymptom.execute({
-        ...req.body,
-        petId: req.params.petId,
-        observedAt: new Date(req.body.observedAt),
-        requestingUserId: req.auth.userId,
-      });
-      res.status(201).json(this.symptomMapper.toResponse(symptom));
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  getHealthChecks = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const page = Math.max(1, parseInt(req.query.page as string) || 1);
-      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
-      const result = await this.listHealthChecks.execute(req.params.petId, req.auth.userId, { page, limit });
-      res.json({ ...result, items: result.items.map((c) => this.healthCheckMapper.toResponse(c)) });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  createHealthCheck = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const check = await this.addHealthCheck.execute({
-        ...req.body,
-        petId: req.params.petId,
-        checkedAt: new Date(req.body.checkedAt),
-        requestingUserId: req.auth.userId,
-      });
-      res.status(201).json(this.healthCheckMapper.toResponse(check));
     } catch (err) {
       next(err);
     }

@@ -1,7 +1,6 @@
 import { Inject, Service } from 'typedi';
 import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../domain/health/HealthRecordRepository';
 import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
-import { GroupRepository, GROUP_REPOSITORY } from '../../domain/group/GroupRepository';
 import { ReminderRepository, REMINDER_REPOSITORY } from '../../domain/reminder/ReminderRepository';
 import { Reminder } from '../../domain/reminder/Reminder';
 import { FrequencySchedule, FrequencyType } from '../../domain/health/value-objects/FrequencySchedule';
@@ -12,7 +11,6 @@ interface ConfigureReminderInput {
   medicationId: string;
   frequencyType: FrequencyType;
   frequencyInterval: number;
-  notifyUserIds: string[];
   enabled: boolean;
   requestingUserId: string;
 }
@@ -22,7 +20,6 @@ export class ConfigureMedicationReminderUseCase {
   constructor(
     @Inject(HEALTH_RECORD_REPOSITORY) private readonly healthRepo: HealthRecordRepository,
     @Inject(PET_REPOSITORY) private readonly petRepository: PetRepository,
-    @Inject(GROUP_REPOSITORY) private readonly groupRepository: GroupRepository,
     @Inject(REMINDER_REPOSITORY) private readonly reminderRepo: ReminderRepository,
     private readonly reminderScheduler: ReminderSchedulerService,
   ) {}
@@ -33,9 +30,7 @@ export class ConfigureMedicationReminderUseCase {
 
     const pet = await this.petRepository.findById(medication.petId);
     if (!pet) throw new NotFoundError('Pet');
-
-    const group = await this.groupRepository.findById(pet.groupId);
-    if (!group?.hasMember(input.requestingUserId)) throw new ForbiddenError('Not a group member');
+    if (pet.userId !== input.requestingUserId) throw new ForbiddenError('Not your pet');
 
     const schedule = FrequencySchedule.create({
       type: input.frequencyType,
@@ -54,7 +49,7 @@ export class ConfigureMedicationReminderUseCase {
         entityId: input.medicationId,
         schedule,
         enabled: input.enabled,
-        notifyUserIds: input.notifyUserIds,
+        notifyUserIds: [input.requestingUserId],
         createdBy: input.requestingUserId,
       });
     }

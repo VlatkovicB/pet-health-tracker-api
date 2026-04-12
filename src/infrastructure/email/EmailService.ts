@@ -20,8 +20,7 @@ export interface SendEmailOptions {
 @Service()
 export class EmailService {
   private readonly resend = new Resend(process.env.RESEND_API_KEY);
-  private readonly from =
-    process.env.EMAIL_FROM ?? "onboarding@resend.dev";
+  private readonly from = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
 
   async send(opts: SendEmailOptions): Promise<void> {
     const to = Array.isArray(opts.to) ? opts.to : [opts.to];

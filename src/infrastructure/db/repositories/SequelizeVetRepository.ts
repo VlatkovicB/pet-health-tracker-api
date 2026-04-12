@@ -14,9 +14,9 @@ export class SequelizeVetRepository implements VetRepository {
     return model ? this.mapper.toDomain(model) : null;
   }
 
-  async findByGroupId(groupId: string, { page, limit }: PaginationParams): Promise<PaginatedResult<Vet>> {
+  async findByUserId(userId: string, { page, limit }: PaginationParams): Promise<PaginatedResult<Vet>> {
     const { count, rows } = await VetModel.findAndCountAll({
-      where: { groupId },
+      where: { userId },
       limit,
       offset: (page - 1) * limit,
     });

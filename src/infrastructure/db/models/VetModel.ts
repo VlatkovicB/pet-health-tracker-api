@@ -1,5 +1,5 @@
 import { BelongsTo, Column, DataType, ForeignKey, Model, PrimaryKey, Table } from 'sequelize-typescript';
-import { GroupModel } from './GroupModel';
+import { UserModel } from './UserModel';
 
 @Table({ tableName: 'vets', timestamps: false })
 export class VetModel extends Model {
@@ -7,9 +7,9 @@ export class VetModel extends Model {
   @Column(DataType.UUID)
   declare id: string;
 
-  @ForeignKey(() => GroupModel)
-  @Column({ type: DataType.UUID, allowNull: false, field: 'group_id' })
-  declare groupId: string;
+  @ForeignKey(() => UserModel)
+  @Column({ type: DataType.UUID, allowNull: false, field: 'user_id' })
+  declare userId: string;
 
   @Column({ type: DataType.STRING, allowNull: false })
   declare name: string;
@@ -32,6 +32,6 @@ export class VetModel extends Model {
   @Column({ type: DataType.DATE, allowNull: false, field: 'created_at' })
   declare createdAt: Date;
 
-  @BelongsTo(() => GroupModel)
-  declare group: GroupModel;
+  @BelongsTo(() => UserModel)
+  declare user: UserModel;
 }

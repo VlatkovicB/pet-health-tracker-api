@@ -1,7 +1,6 @@
 import { Inject, Service } from 'typedi';
 import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../domain/health/HealthRecordRepository';
 import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
-import { GroupRepository, GROUP_REPOSITORY } from '../../domain/group/GroupRepository';
 import { ReminderRepository, REMINDER_REPOSITORY } from '../../domain/reminder/ReminderRepository';
 import { ForbiddenError, NotFoundError } from '../../shared/errors/AppError';
 import { ReminderSchedulerService } from '../../infrastructure/queue/ReminderSchedulerService';
@@ -11,7 +10,6 @@ export class ToggleMedicationReminderUseCase {
   constructor(
     @Inject(HEALTH_RECORD_REPOSITORY) private readonly healthRepo: HealthRecordRepository,
     @Inject(PET_REPOSITORY) private readonly petRepository: PetRepository,
-    @Inject(GROUP_REPOSITORY) private readonly groupRepository: GroupRepository,
     @Inject(REMINDER_REPOSITORY) private readonly reminderRepo: ReminderRepository,
     private readonly reminderScheduler: ReminderSchedulerService,
   ) {}
@@ -22,9 +20,7 @@ export class ToggleMedicationReminderUseCase {
 
     const pet = await this.petRepository.findById(medication.petId);
     if (!pet) throw new NotFoundError('Pet');
-
-    const group = await this.groupRepository.findById(pet.groupId);
-    if (!group?.hasMember(requestingUserId)) throw new ForbiddenError('Not a group member');
+    if (pet.userId !== requestingUserId) throw new ForbiddenError('Not your pet');
 
     const reminder = await this.reminderRepo.findByEntityId(medicationId);
     if (!reminder) throw new NotFoundError('Reminder');

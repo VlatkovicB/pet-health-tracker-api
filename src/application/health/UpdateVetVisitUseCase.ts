@@ -1,7 +1,6 @@
 import { Inject, Service } from 'typedi';
 import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../domain/health/HealthRecordRepository';
 import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
-import { GroupRepository, GROUP_REPOSITORY } from '../../domain/group/GroupRepository';
 import { VetVisit } from '../../domain/health/VetVisit';
 import { ForbiddenError, NotFoundError } from '../../shared/errors/AppError';
 import { ReminderSchedulerService } from '../../infrastructure/queue/ReminderSchedulerService';
@@ -21,7 +20,6 @@ export class UpdateVetVisitUseCase {
   constructor(
     @Inject(HEALTH_RECORD_REPOSITORY) private readonly healthRepo: HealthRecordRepository,
     @Inject(PET_REPOSITORY) private readonly petRepository: PetRepository,
-    @Inject(GROUP_REPOSITORY) private readonly groupRepository: GroupRepository,
     private readonly reminderScheduler: ReminderSchedulerService,
   ) {}
 
@@ -30,8 +28,7 @@ export class UpdateVetVisitUseCase {
     if (!existing) throw new NotFoundError('VetVisit');
 
     const pet = await this.petRepository.findById(existing.petId);
-    const group = await this.groupRepository.findById(pet!.groupId);
-    if (!group?.hasMember(input.requestingUserId)) throw new ForbiddenError('Not a group member');
+    if (!pet || pet.userId !== input.requestingUserId) throw new ForbiddenError('Not your pet');
 
     const resolvedNextVisitDate =
       input.nextVisitDate === null
@@ -60,12 +57,12 @@ export class UpdateVetVisitUseCase {
     if (resolvedNextVisitDate) {
       await this.reminderScheduler.scheduleVetVisitReminder({
         visitId: updated.id.toValue(),
-        petName: pet!.name,
+        petName: pet.name,
         reason: updated.reason,
         nextVisitDate: resolvedNextVisitDate,
         vetName: updated.vetName,
         clinic: updated.clinic,
-        notifyUserIds: group!.members.map((m) => m.userId),
+        notifyUserIds: [input.requestingUserId],
       });
     } else {
       await this.reminderScheduler.cancelVetVisitReminder(updated.id.toValue());

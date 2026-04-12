@@ -5,7 +5,7 @@ import { UniqueEntityId } from '../../domain/shared/UniqueEntityId';
 
 export interface VetResponseDto {
   id: string;
-  groupId: string;
+  userId: string;
   name: string;
   address?: string;
   phone?: string;
@@ -20,7 +20,7 @@ export class VetMapper {
   toDomain(model: VetModel): Vet {
     return Vet.reconstitute(
       {
-        groupId: model.groupId,
+        userId: model.userId,
         name: model.name,
         address: model.address ?? undefined,
         phone: model.phone ?? undefined,
@@ -36,7 +36,7 @@ export class VetMapper {
   toPersistence(vet: Vet): object {
     return {
       id: vet.id.toValue(),
-      groupId: vet.groupId,
+      userId: vet.userId,
       name: vet.name,
       address: vet.address ?? null,
       phone: vet.phone ?? null,
@@ -50,7 +50,7 @@ export class VetMapper {
   toResponse(vet: Vet): VetResponseDto {
     return {
       id: vet.id.toValue(),
-      groupId: vet.groupId,
+      userId: vet.userId,
       name: vet.name,
       address: vet.address,
       phone: vet.phone,

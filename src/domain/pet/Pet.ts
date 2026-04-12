@@ -6,7 +6,7 @@ interface PetProps {
   species: string;
   breed?: string;
   birthDate?: Date;
-  groupId: string;
+  userId: string;
   photoUrl?: string;
   createdAt: Date;
 }
@@ -16,7 +16,7 @@ export class Pet extends AggregateRoot<PetProps> {
   get species(): string { return this.props.species; }
   get breed(): string | undefined { return this.props.breed; }
   get birthDate(): Date | undefined { return this.props.birthDate; }
-  get groupId(): string { return this.props.groupId; }
+  get userId(): string { return this.props.userId; }
   get photoUrl(): string | undefined { return this.props.photoUrl; }
   get createdAt(): Date { return this.props.createdAt; }
 

@@ -1,6 +1,5 @@
 import { Inject, Service } from 'typedi';
 import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
-import { GroupRepository, GROUP_REPOSITORY } from '../../domain/group/GroupRepository';
 import { Pet } from '../../domain/pet/Pet';
 import { ForbiddenError, NotFoundError } from '../../shared/errors/AppError';
 import { UniqueEntityId } from '../../domain/shared/UniqueEntityId';
@@ -19,14 +18,12 @@ export interface UpdatePetInput {
 export class UpdatePetUseCase {
   constructor(
     @Inject(PET_REPOSITORY) private readonly petRepository: PetRepository,
-    @Inject(GROUP_REPOSITORY) private readonly groupRepository: GroupRepository,
   ) {}
 
   async execute(input: UpdatePetInput): Promise<Pet> {
     const existing = await this.petRepository.findById(input.petId);
     if (!existing) throw new NotFoundError('Pet');
-    const group = await this.groupRepository.findById(existing.groupId);
-    if (!group?.hasMember(input.requestingUserId)) throw new ForbiddenError('Not a group member');
+    if (existing.userId !== input.requestingUserId) throw new ForbiddenError('Not your pet');
 
     const updated = Pet.reconstitute(
       {
@@ -35,7 +32,7 @@ export class UpdatePetUseCase {
         breed: input.breed !== undefined ? input.breed : existing.breed,
         birthDate: input.birthDate !== undefined ? input.birthDate : existing.birthDate,
         photoUrl: input.photoUrl !== undefined ? input.photoUrl : existing.photoUrl,
-        groupId: existing.groupId,
+        userId: existing.userId,
         createdAt: existing.createdAt,
       },
       new UniqueEntityId(existing.id.toValue()),

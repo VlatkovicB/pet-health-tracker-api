@@ -2,7 +2,7 @@ import { Service } from 'typedi';
 import { notificationQueue, MedicationReminderJobData, VetVisitReminderJobData } from './NotificationQueue';
 import { Reminder } from '../../domain/reminder/Reminder';
 
-const VET_VISIT_JOB_PREFIX = 'vet-visit-reminder';
+const VET_VISIT_JOB_PREFIX = 'vet-visit-reminder--';
 const DEFAULT_LEAD_TIME_MS = 24 * 60 * 60 * 1000; // 24 hours before visit
 
 export interface VetVisitReminderContext {
@@ -37,7 +37,7 @@ export class ReminderSchedulerService {
       notifyUserIds: reminder.notifyUserIds,
     };
 
-    const jobName = `reminder:${reminder.entityId}`;
+    const jobName = `reminder--${reminder.entityId}`;
     await notificationQueue.add(jobName, jobData, {
       repeat: { every: reminder.schedule.toMilliseconds() },
       jobId: jobName,
@@ -48,7 +48,7 @@ export class ReminderSchedulerService {
     const repeatableJobs = await notificationQueue.getRepeatableJobs();
     await Promise.all(
       repeatableJobs
-        .filter((job) => job.name === `reminder:${entityId}`)
+        .filter((job) => job.name === `reminder--${entityId}`)
         .map((job) => notificationQueue.removeRepeatableByKey(job.key)),
     );
   }
@@ -73,12 +73,12 @@ export class ReminderSchedulerService {
       notifyUserIds: ctx.notifyUserIds,
     };
 
-    const jobId = `${VET_VISIT_JOB_PREFIX}:${ctx.visitId}`;
+    const jobId = `${VET_VISIT_JOB_PREFIX}${ctx.visitId}`;
     await notificationQueue.add(jobId, jobData, { delay, jobId });
   }
 
   async cancelVetVisitReminder(visitId: string): Promise<void> {
-    const jobId = `${VET_VISIT_JOB_PREFIX}:${visitId}`;
+    const jobId = `${VET_VISIT_JOB_PREFIX}${visitId}`;
     const job = await notificationQueue.getJob(jobId);
     if (job) await job.remove();
   }

@@ -1,13 +1,9 @@
 import { Sequelize } from 'sequelize-typescript';
 import { UserModel } from './models/UserModel';
 import { PetModel } from './models/PetModel';
-import { GroupModel } from './models/GroupModel';
-import { GroupMemberModel } from './models/GroupMemberModel';
 import { VetModel } from './models/VetModel';
 import { VetVisitModel } from './models/VetVisitModel';
 import { MedicationModel } from './models/MedicationModel';
-import { SymptomModel } from './models/SymptomModel';
-import { HealthCheckModel } from './models/HealthCheckModel';
 import { ReminderModel } from './models/ReminderModel';
 import { ReminderNotifyUserModel } from './models/ReminderNotifyUserModel';
 
@@ -22,13 +18,9 @@ export const sequelize = new Sequelize({
   models: [
     UserModel,
     PetModel,
-    GroupModel,
-    GroupMemberModel,
     VetModel,
     VetVisitModel,
     MedicationModel,
-    SymptomModel,
-    HealthCheckModel,
     ReminderModel,
     ReminderNotifyUserModel,
   ],

@@ -1,5 +1,5 @@
 import { Column, DataType, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript';
-import { GroupMemberModel } from './GroupMemberModel';
+import { PetModel } from './PetModel';
 
 @Table({ tableName: 'users', timestamps: false })
 export class UserModel extends Model {
@@ -16,9 +16,12 @@ export class UserModel extends Model {
   @Column({ type: DataType.STRING, allowNull: false, field: 'password_hash' })
   declare passwordHash: string;
 
+  @Column({ type: DataType.ENUM('light', 'dark'), allowNull: false, defaultValue: 'light' })
+  declare theme: 'light' | 'dark';
+
   @Column({ type: DataType.DATE, allowNull: false, field: 'created_at' })
   declare createdAt: Date;
 
-  @HasMany(() => GroupMemberModel)
-  declare groupMemberships: GroupMemberModel[];
+  @HasMany(() => PetModel)
+  declare pets: PetModel[];
 }

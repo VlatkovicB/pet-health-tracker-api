@@ -2,7 +2,7 @@ import { Entity } from '../shared/Entity';
 import { UniqueEntityId } from '../shared/UniqueEntityId';
 
 interface VetProps {
-  groupId: string;
+  userId: string;
   name: string;
   address?: string;
   phone?: string;
@@ -13,7 +13,7 @@ interface VetProps {
 }
 
 export class Vet extends Entity<VetProps> {
-  get groupId(): string { return this.props.groupId; }
+  get userId(): string { return this.props.userId; }
   get name(): string { return this.props.name; }
   get address(): string | undefined { return this.props.address; }
   get phone(): string | undefined { return this.props.phone; }

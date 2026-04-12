@@ -21,7 +21,6 @@ export class PetController {
       const pet = await this.addPet.execute({
         ...req.body,
         birthDate: req.body.birthDate ? new Date(req.body.birthDate) : undefined,
-        groupId: req.params.groupId,
         requestingUserId: req.auth.userId,
       });
       res.status(201).json(this.mapper.toResponse(pet));
@@ -34,7 +33,7 @@ export class PetController {
     try {
       const page = Math.max(1, parseInt(req.query.page as string) || 1);
       const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
-      const result = await this.listPets.execute(req.params.groupId, req.auth.userId, { page, limit });
+      const result = await this.listPets.execute(req.auth.userId, { page, limit });
       res.json({ ...result, items: result.items.map((p) => this.mapper.toResponse(p)) });
     } catch (err) {
       next(err);

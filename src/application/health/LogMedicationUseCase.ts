@@ -1,7 +1,6 @@
 import { Inject, Service } from 'typedi';
 import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../domain/health/HealthRecordRepository';
 import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
-import { GroupRepository, GROUP_REPOSITORY } from '../../domain/group/GroupRepository';
 import { Medication } from '../../domain/health/Medication';
 import { Dosage } from '../../domain/health/value-objects/Dosage';
 import { FrequencySchedule, FrequencyType } from '../../domain/health/value-objects/FrequencySchedule';
@@ -24,7 +23,6 @@ export class LogMedicationUseCase {
   constructor(
     @Inject(HEALTH_RECORD_REPOSITORY) private readonly healthRepo: HealthRecordRepository,
     @Inject(PET_REPOSITORY) private readonly petRepository: PetRepository,
-    @Inject(GROUP_REPOSITORY) private readonly groupRepository: GroupRepository,
   ) {}
 
   async execute(input: LogMedicationInput): Promise<Medication> {
@@ -36,9 +34,7 @@ export class LogMedicationUseCase {
 
     const pet = await this.petRepository.findById(input.petId);
     if (!pet) throw new NotFoundError('Pet');
-
-    const group = await this.groupRepository.findById(pet.groupId);
-    if (!group?.hasMember(input.requestingUserId)) throw new ForbiddenError('Not a group member');
+    if (pet.userId !== input.requestingUserId) throw new ForbiddenError('Not your pet');
 
     const medication = Medication.create({
       petId: input.petId,

@@ -3,7 +3,7 @@ import { PaginationParams, PaginatedResult } from '../../shared/types/Pagination
 
 export interface VetRepository {
   findById(id: string): Promise<Vet | null>;
-  findByGroupId(groupId: string, pagination: PaginationParams): Promise<PaginatedResult<Vet>>;
+  findByUserId(userId: string, pagination: PaginationParams): Promise<PaginatedResult<Vet>>;
   save(vet: Vet): Promise<void>;
 }
 
