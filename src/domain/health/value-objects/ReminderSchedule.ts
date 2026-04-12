@@ -2,66 +2,77 @@ import { ValueObject } from '../../shared/ValueObject';
 
 export type DayOfWeek = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';
 
-const DAY_CRON_MAP: Record<DayOfWeek, number> = {
+const DAY_CRON: Record<DayOfWeek, number> = {
   SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6,
 };
 
-interface ReminderScheduleProps {
-  /** Fixed times of day, e.g. ["08:00", "20:00"]. Mutually exclusive with intervalHours. */
-  times?: string[];
-  /** Repeat every N hours, e.g. 8. Mutually exclusive with times. */
-  intervalHours?: number;
-  /** Restrict to specific days. If omitted, runs every day. */
-  days?: DayOfWeek[];
-  timezone: string;
+export type DailySchedule   = { type: 'daily';   times: string[] };
+export type WeeklySchedule  = { type: 'weekly';  days: DayOfWeek[];     times: string[] };
+export type MonthlySchedule = { type: 'monthly'; daysOfMonth: number[]; times: string[] };
+
+export type ReminderScheduleProps = DailySchedule | WeeklySchedule | MonthlySchedule;
+
+function validateTimes(times: string[]): void {
+  if (!times.length) throw new Error('times must not be empty');
+  for (const t of times) {
+    if (!/^\d{2}:\d{2}$/.test(t)) throw new Error(`Invalid time format: ${t}`);
+    const [h, m] = t.split(':').map(Number);
+    if (h < 0 || h > 23) throw new Error(`Invalid hour: ${h}`);
+    if (m < 0 || m > 59) throw new Error(`Invalid minute: ${m}`);
+  }
 }
 
 export class ReminderSchedule extends ValueObject<ReminderScheduleProps> {
-  get times(): string[] | undefined {
-    return this.props.times;
-  }
-
-  get intervalHours(): number | undefined {
-    return this.props.intervalHours;
-  }
+  get type(): 'daily' | 'weekly' | 'monthly' { return this.props.type; }
+  get times(): string[] { return this.props.times; }
 
   get days(): DayOfWeek[] | undefined {
-    return this.props.days;
+    return this.props.type === 'weekly' ? this.props.days : undefined;
   }
 
-  get timezone(): string {
-    return this.props.timezone;
+  get daysOfMonth(): number[] | undefined {
+    return this.props.type === 'monthly' ? this.props.daysOfMonth : undefined;
   }
 
-  /** Returns one cron expression per trigger point */
+  toJSON(): ReminderScheduleProps {
+    return { ...this.props } as ReminderScheduleProps;
+  }
+
   toCronExpressions(): string[] {
-    const dayPart = this.props.days
-      ? this.props.days.map((d) => DAY_CRON_MAP[d]).join(',')
-      : '*';
-
-    if (this.props.intervalHours) {
-      return [`0 */${this.props.intervalHours} * * ${dayPart}`];
+    const p = this.props;
+    switch (p.type) {
+      case 'daily':
+        return p.times.map((t) => {
+          const [h, m] = t.split(':');
+          return `${Number(m)} ${Number(h)} * * *`;
+        });
+      case 'weekly': {
+        const dayPart = p.days.map((d) => DAY_CRON[d]).join(',');
+        return p.times.map((t) => {
+          const [h, m] = t.split(':');
+          return `${Number(m)} ${Number(h)} * * ${dayPart}`;
+        });
+      }
+      case 'monthly': {
+        const domPart = p.daysOfMonth.join(',');
+        return p.times.map((t) => {
+          const [h, m] = t.split(':');
+          return `${Number(m)} ${Number(h)} ${domPart} * *`;
+        });
+      }
     }
-
-    if (this.props.times && this.props.times.length > 0) {
-      return this.props.times.map((time) => {
-        const [hour, minute] = time.split(':');
-        return `${minute} ${hour} * * ${dayPart}`;
-      });
-    }
-
-    throw new Error('ReminderSchedule must have either times or intervalHours');
   }
 
   static create(props: ReminderScheduleProps): ReminderSchedule {
-    if (!props.times?.length && !props.intervalHours) {
-      throw new Error('ReminderSchedule requires times or intervalHours');
+    validateTimes(props.times);
+    if (props.type === 'weekly') {
+      if (!props.days.length) throw new Error('weekly schedule requires at least one day');
     }
-    if (props.times?.length && props.intervalHours) {
-      throw new Error('ReminderSchedule cannot have both times and intervalHours');
-    }
-    if (!props.timezone) {
-      throw new Error('ReminderSchedule requires a timezone');
+    if (props.type === 'monthly') {
+      if (!props.daysOfMonth.length) throw new Error('monthly schedule requires at least one day of month');
+      for (const d of props.daysOfMonth) {
+        if (d < 1 || d > 31) throw new Error(`Invalid day of month: ${d}`);
+      }
     }
     return new ReminderSchedule(props);
   }
