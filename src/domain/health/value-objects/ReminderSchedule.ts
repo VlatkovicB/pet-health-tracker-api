@@ -13,8 +13,10 @@ export type MonthlySchedule = { type: 'monthly'; daysOfMonth: number[]; times: s
 export type ReminderScheduleProps = DailySchedule | WeeklySchedule | MonthlySchedule;
 
 function validateTimes(times: string[]): void {
-  if (!times.length) throw new Error('times must not be empty');
-  for (const t of times) {
+  // Deduplicate times to prevent duplicate schedulers
+  const uniqueTimes = Array.from(new Set(times));
+  if (!uniqueTimes.length) throw new Error('times must not be empty');
+  for (const t of uniqueTimes) {
     if (!/^\d{2}:\d{2}$/.test(t)) throw new Error(`Invalid time format: ${t}`);
     const [h, m] = t.split(':').map(Number);
     if (h < 0 || h > 23) throw new Error(`Invalid hour: ${h}`);
@@ -60,6 +62,8 @@ export class ReminderSchedule extends ValueObject<ReminderScheduleProps> {
           return `${Number(m)} ${Number(h)} ${domPart} * *`;
         });
       }
+      default:
+        throw new Error(`Unknown schedule type: ${(p as any).type}`);
     }
   }
 
