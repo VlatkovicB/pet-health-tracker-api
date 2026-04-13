@@ -11,7 +11,6 @@ export interface UpdateVetVisitInput {
   reason?: string;
   notes?: string;
   visitDate?: Date;
-  nextVisitDate?: Date | null;
   requestingUserId: string;
 }
 
@@ -30,14 +29,10 @@ export class UpdateVetVisitUseCase {
     const pet = await this.petRepository.findById(existing.petId);
     if (!pet || pet.userId !== input.requestingUserId) throw new ForbiddenError('Not your pet');
 
-    const resolvedNextVisitDate =
-      input.nextVisitDate === null
-        ? undefined
-        : (input.nextVisitDate ?? existing.nextVisitDate);
-
     const updated = VetVisit.reconstitute(
       {
         petId: existing.petId,
+        type: existing.type,
         createdBy: existing.createdBy,
         createdAt: existing.createdAt,
         imageUrls: existing.imageUrls,
@@ -47,25 +42,23 @@ export class UpdateVetVisitUseCase {
         reason: input.reason ?? existing.reason,
         notes: input.notes !== undefined ? (input.notes || undefined) : existing.notes,
         visitDate: input.visitDate ?? existing.visitDate,
-        nextVisitDate: resolvedNextVisitDate,
       },
       existing.id,
     );
 
     await this.healthRepo.saveVetVisit(updated);
 
-    if (resolvedNextVisitDate) {
+    // Reschedule lead-time job if visitDate changed on a scheduled visit
+    if (updated.type === 'scheduled' && input.visitDate) {
       await this.reminderScheduler.scheduleVetVisitReminder({
         visitId: updated.id.toValue(),
         petName: pet.name,
         reason: updated.reason,
-        nextVisitDate: resolvedNextVisitDate,
+        nextVisitDate: updated.visitDate,
         vetName: updated.vetName,
         clinic: updated.clinic,
         notifyUserIds: [input.requestingUserId],
       });
-    } else {
-      await this.reminderScheduler.cancelVetVisitReminder(updated.id.toValue());
     }
 
     return updated;
