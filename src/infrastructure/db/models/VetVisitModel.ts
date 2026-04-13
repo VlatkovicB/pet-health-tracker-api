@@ -12,6 +12,9 @@ export class VetVisitModel extends Model {
   @Column({ type: DataType.UUID, allowNull: false, field: 'pet_id' })
   declare petId: string;
 
+  @Column({ type: DataType.STRING, allowNull: false, defaultValue: 'logged' })
+  declare type: string;
+
   @ForeignKey(() => VetModel)
   @Column({ type: DataType.UUID, allowNull: true, field: 'vet_id' })
   declare vetId: string | null;
@@ -33,9 +36,6 @@ export class VetVisitModel extends Model {
 
   @Column({ type: DataType.JSONB, allowNull: false, defaultValue: [], field: 'image_urls' })
   declare imageUrls: string[];
-
-  @Column({ type: DataType.DATE, allowNull: true, field: 'next_visit_date' })
-  declare nextVisitDate: Date | null;
 
   @Column({ type: DataType.UUID, allowNull: false, field: 'created_by' })
   declare createdBy: string;
