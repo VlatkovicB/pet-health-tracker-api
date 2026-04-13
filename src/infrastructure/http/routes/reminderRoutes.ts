@@ -7,6 +7,7 @@ export function reminderRoutes(): Router {
   const router = Router();
   const controller = Container.get(ReminderController);
 
+  router.get('/:medicationId/reminder', authMiddleware, controller.getReminder);
   router.put('/:medicationId/reminder', authMiddleware, controller.configure);
   router.patch('/:medicationId/reminder/toggle', authMiddleware, controller.toggle);
 
