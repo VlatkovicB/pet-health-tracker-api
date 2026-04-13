@@ -5,6 +5,7 @@ import { AddVetVisitImageUseCase } from '../../../application/health/AddVetVisit
 import { UpdateVetVisitUseCase } from '../../../application/health/UpdateVetVisitUseCase';
 import { CompleteVetVisitUseCase } from '../../../application/health/CompleteVetVisitUseCase';
 import { ListVetVisitsUseCase } from '../../../application/health/ListVetVisitsUseCase';
+import { ListVetVisitsByDateRangeUseCase } from '../../../application/health/ListVetVisitsByDateRangeUseCase';
 import { LogMedicationUseCase } from '../../../application/health/LogMedicationUseCase';
 import { UpdateMedicationUseCase } from '../../../application/health/UpdateMedicationUseCase';
 import { ListMedicationsUseCase } from '../../../application/health/ListMedicationsUseCase';
@@ -23,6 +24,7 @@ export class HealthController {
     private readonly updateVetVisit: UpdateVetVisitUseCase,
     private readonly completeVetVisitUseCase: CompleteVetVisitUseCase,
     private readonly listVetVisits: ListVetVisitsUseCase,
+    private readonly listVetVisitsByDateRange: ListVetVisitsByDateRangeUseCase,
     private readonly logMedication: LogMedicationUseCase,
     private readonly updateMedication: UpdateMedicationUseCase,
     private readonly listMedications: ListMedicationsUseCase,
@@ -127,6 +129,27 @@ export class HealthController {
         requestingUserId: req.auth.userId,
       });
       res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getVetVisitsByDateRange = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { from, to } = req.query as { from?: string; to?: string };
+      if (!from || !to) {
+        res.status(400).json({ message: '`from` and `to` query params are required (YYYY-MM-DD)' });
+        return;
+      }
+      const fromDate = new Date(from);
+      const toDate = new Date(to);
+      toDate.setHours(23, 59, 59, 999);
+      if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+        res.status(400).json({ message: 'Invalid date format. Use YYYY-MM-DD.' });
+        return;
+      }
+      const visits = await this.listVetVisitsByDateRange.execute(req.auth.userId, fromDate, toDate);
+      res.json(visits.map((v) => this.vetVisitMapper.toResponse(v)));
     } catch (err) {
       next(err);
     }

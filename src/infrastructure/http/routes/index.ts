@@ -19,6 +19,7 @@ export function buildRouter(): Router {
   router.use('/vets', vetRoutes());
   router.use('/medications', reminderRoutes());
   router.get('/vet-visits/upcoming', authMiddleware, Container.get(HealthController).getUpcomingVetVisits);
+  router.get('/vet-visits', authMiddleware, Container.get(HealthController).getVetVisitsByDateRange);
 
   return router;
 }

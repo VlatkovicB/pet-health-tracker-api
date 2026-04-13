@@ -7,6 +7,7 @@ export interface HealthRecordRepository {
   findVetVisitById(id: string): Promise<VetVisit | null>;
   findVetVisitsByPetId(petId: string, pagination: PaginationParams): Promise<PaginatedResult<VetVisit>>;
   findUpcomingVetVisitsByUserId(userId: string): Promise<VetVisit[]>;
+  findVetVisitsByDateRange(userId: string, from: Date, to: Date): Promise<VetVisit[]>;
   saveVetVisit(visit: VetVisit): Promise<void>;
 
   // Medications
