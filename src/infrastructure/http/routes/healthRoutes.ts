@@ -11,6 +11,9 @@ export function healthRoutes(): Router {
   router.get('/:petId/vet-visits', authMiddleware, controller.getVetVisits);
   router.post('/:petId/vet-visits', authMiddleware, controller.createVetVisit);
   router.put('/:petId/vet-visits/:visitId', authMiddleware, controller.updateVetVisitHandler);
+  router.patch('/:petId/vet-visits/:visitId/complete', authMiddleware, controller.completeVetVisit);
+  router.get('/:petId/vet-visits/:visitId/reminder', authMiddleware, controller.getVetVisitReminder);
+  router.put('/:petId/vet-visits/:visitId/reminder', authMiddleware, controller.configureVetVisitReminderHandler);
   router.post('/:petId/vet-visits/:visitId/images', authMiddleware, uploadImage.single('image'), controller.uploadVetVisitImage);
   router.get('/:petId/medications', authMiddleware, controller.getMedications);
   router.post('/:petId/medications', authMiddleware, controller.createMedication);
