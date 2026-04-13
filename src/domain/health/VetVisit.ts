@@ -1,21 +1,24 @@
 import { Entity } from '../shared/Entity';
 import { UniqueEntityId } from '../shared/UniqueEntityId';
 
+export type VetVisitType = 'logged' | 'scheduled';
+
 interface VetVisitProps {
   petId: string;
+  type: VetVisitType;
   vetId?: string;
   visitDate: Date;
   clinic?: string;
   vetName?: string;
   reason: string;
   notes?: string;
-  nextVisitDate?: Date;
   imageUrls: string[];
   createdBy: string;
   createdAt: Date;
 }
 
 export class VetVisit extends Entity<VetVisitProps> {
+  get type(): VetVisitType { return this.props.type; }
   get petId(): string { return this.props.petId; }
   get vetId(): string | undefined { return this.props.vetId; }
   get visitDate(): Date { return this.props.visitDate; }
@@ -23,7 +26,6 @@ export class VetVisit extends Entity<VetVisitProps> {
   get vetName(): string | undefined { return this.props.vetName; }
   get reason(): string { return this.props.reason; }
   get notes(): string | undefined { return this.props.notes; }
-  get nextVisitDate(): Date | undefined { return this.props.nextVisitDate; }
   get imageUrls(): string[] { return this.props.imageUrls; }
   get createdBy(): string { return this.props.createdBy; }
   get createdAt(): Date { return this.props.createdAt; }
