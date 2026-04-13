@@ -5,6 +5,7 @@ import {
   NotificationJobData,
   MedicationReminderJobData,
   VetVisitReminderJobData,
+  VetVisitRepeatingReminderJobData,
 } from './NotificationQueue';
 import { EmailService } from '../email/EmailService';
 import { UserRepository } from '../../domain/user/UserRepository';
@@ -38,6 +39,9 @@ export class NotificationWorker {
       case 'vet_visit_reminder':
         await this.processVetVisitReminder(job.data, users);
         break;
+      case 'vet_visit_repeating_reminder':
+        await this.processVetVisitRepeatingReminder(job.data, users);
+        break;
     }
   }
 
@@ -68,6 +72,28 @@ export class NotificationWorker {
           petName: data.petName,
           reason: data.reason,
           nextVisitDate: data.nextVisitDate,
+          vetName: data.vetName,
+          clinic: data.clinic,
+          daysUntil,
+        }),
+      ),
+    );
+  }
+
+  private async processVetVisitRepeatingReminder(data: VetVisitRepeatingReminderJobData, users: User[]): Promise<void> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const [year, month, day] = data.visitDate.split('T')[0].split('-').map(Number);
+    const visitDay = new Date(year, month - 1, day);
+    const daysUntil = Math.round((visitDay.getTime() - today.getTime()) / 86_400_000);
+
+    await Promise.all(
+      users.map((user) =>
+        this.emailService.sendVetVisitReminder(user.email, {
+          recipientName: user.name,
+          petName: data.petName,
+          reason: data.reason,
+          nextVisitDate: data.visitDate,
           vetName: data.vetName,
           clinic: data.clinic,
           daysUntil,
