@@ -1,5 +1,5 @@
 import { Service } from 'typedi';
-import { notificationQueue, MedicationReminderJobData, VetVisitReminderJobData } from './NotificationQueue';
+import { notificationQueue, MedicationReminderJobData, VetVisitReminderJobData, VetVisitRepeatingReminderJobData } from './NotificationQueue';
 import { Reminder } from '../../domain/reminder/Reminder';
 
 const VET_VISIT_JOB_PREFIX = 'vet-visit-reminder--';
@@ -56,6 +56,44 @@ export class ReminderSchedulerService {
       schedulers
         .filter((s) => s.id?.startsWith(prefix))
         .map((s) => notificationQueue.removeJobScheduler(s.id!)),
+    );
+  }
+
+  async scheduleVetVisitRepeatingReminder(
+    reminder: Reminder,
+    context: {
+      petId: string;
+      petName: string;
+      reason: string;
+      visitDate: Date;
+      vetName?: string;
+      clinic?: string;
+    },
+  ): Promise<void> {
+    if (!reminder.enabled) return;
+
+    await this.cancelReminders(reminder.entityId);
+
+    const jobData: VetVisitRepeatingReminderJobData = {
+      type: 'vet_visit_repeating_reminder',
+      reminderId: reminder.id.toValue(),
+      petName: context.petName,
+      reason: context.reason,
+      visitDate: context.visitDate.toISOString(),
+      vetName: context.vetName,
+      clinic: context.clinic,
+      notifyUserIds: reminder.notifyUserIds,
+    };
+
+    const cronExpressions = reminder.schedule.toCronExpressions();
+    await Promise.all(
+      cronExpressions.map((pattern, index) =>
+        notificationQueue.upsertJobScheduler(
+          `reminder--${reminder.entityId}--${index}`,
+          { pattern, tz: 'UTC' },
+          { name: `reminder--${reminder.entityId}`, data: jobData },
+        ),
+      ),
     );
   }
 
