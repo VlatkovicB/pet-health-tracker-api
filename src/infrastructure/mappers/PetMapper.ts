@@ -10,6 +10,7 @@ export interface PetResponseDto {
   breed?: string;
   birthDate?: string;
   photoUrl?: string;
+  color?: string;
   userId: string;
   createdAt: string;
 }
@@ -24,6 +25,7 @@ export class PetMapper {
         breed: model.breed ?? undefined,
         birthDate: model.birthDate ?? undefined,
         photoUrl: model.photoUrl ?? undefined,
+        color: model.color ?? undefined,
         userId: model.userId,
         createdAt: model.createdAt,
       },
@@ -39,6 +41,7 @@ export class PetMapper {
       breed: pet.breed ?? null,
       birthDate: pet.birthDate ?? null,
       photoUrl: pet.photoUrl ?? null,
+      color: pet.color ?? null,
       userId: pet.userId,
       createdAt: pet.createdAt,
     };
@@ -52,6 +55,7 @@ export class PetMapper {
       breed: pet.breed,
       birthDate: pet.birthDate?.toISOString(),
       photoUrl: pet.photoUrl,
+      color: pet.color,
       userId: pet.userId,
       createdAt: pet.createdAt.toISOString(),
     };

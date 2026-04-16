@@ -57,6 +57,7 @@ export class PetController {
         species: req.body.species,
         breed: req.body.breed,
         birthDate: req.body.birthDate ? new Date(req.body.birthDate) : undefined,
+        color: req.body.color,
         requestingUserId: req.auth.userId,
       });
       res.json(this.mapper.toResponse(pet));

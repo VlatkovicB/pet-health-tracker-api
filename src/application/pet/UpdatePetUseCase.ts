@@ -11,6 +11,7 @@ export interface UpdatePetInput {
   breed?: string;
   birthDate?: Date;
   photoUrl?: string;
+  color?: string;
   requestingUserId: string;
 }
 
@@ -32,6 +33,7 @@ export class UpdatePetUseCase {
         breed: input.breed !== undefined ? input.breed : existing.breed,
         birthDate: input.birthDate !== undefined ? input.birthDate : existing.birthDate,
         photoUrl: input.photoUrl !== undefined ? input.photoUrl : existing.photoUrl,
+        color: input.color !== undefined ? input.color : existing.color,
         userId: existing.userId,
         createdAt: existing.createdAt,
       },

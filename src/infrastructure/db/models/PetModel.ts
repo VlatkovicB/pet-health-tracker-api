@@ -24,6 +24,9 @@ export class PetModel extends Model {
   @Column({ type: DataType.STRING, allowNull: true, field: 'photo_url' })
   declare photoUrl: string | null;
 
+  @Column({ type: DataType.STRING(7), allowNull: true })
+  declare color: string | null;
+
   @ForeignKey(() => UserModel)
   @Column({ type: DataType.UUID, allowNull: false, field: 'user_id' })
   declare userId: string;
