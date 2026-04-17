@@ -2,6 +2,7 @@ import { Sequelize } from 'sequelize-typescript';
 import { UserModel } from './models/UserModel';
 import { PetModel } from './models/PetModel';
 import { VetModel } from './models/VetModel';
+import { VetWorkHoursModel } from './models/VetWorkHoursModel';
 import { VetVisitModel } from './models/VetVisitModel';
 import { MedicationModel } from './models/MedicationModel';
 import { ReminderModel } from './models/ReminderModel';
@@ -19,6 +20,7 @@ export const sequelize = new Sequelize({
     UserModel,
     PetModel,
     VetModel,
+    VetWorkHoursModel,
     VetVisitModel,
     MedicationModel,
     ReminderModel,

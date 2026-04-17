@@ -1,5 +1,6 @@
-import { BelongsTo, Column, DataType, ForeignKey, Model, PrimaryKey, Table } from 'sequelize-typescript';
+import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript';
 import { UserModel } from './UserModel';
+import { VetWorkHoursModel } from './VetWorkHoursModel';
 
 @Table({ tableName: 'vets', timestamps: false })
 export class VetModel extends Model {
@@ -20,9 +21,6 @@ export class VetModel extends Model {
   @Column({ type: DataType.STRING, allowNull: true })
   declare phone: string | null;
 
-  @Column({ type: DataType.STRING, allowNull: true, field: 'work_hours' })
-  declare workHours: string | null;
-
   @Column({ type: DataType.STRING, allowNull: true, field: 'google_maps_url' })
   declare googleMapsUrl: string | null;
 
@@ -37,4 +35,7 @@ export class VetModel extends Model {
 
   @BelongsTo(() => UserModel)
   declare user: UserModel;
+
+  @HasMany(() => VetWorkHoursModel)
+  declare workHours: VetWorkHoursModel[];
 }
