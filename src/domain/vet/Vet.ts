@@ -1,12 +1,20 @@
 import { Entity } from '../shared/Entity';
 import { UniqueEntityId } from '../shared/UniqueEntityId';
+import type { DayOfWeek } from '../health/value-objects/ReminderSchedule';
+
+export interface VetWorkHoursProps {
+  dayOfWeek: DayOfWeek;
+  open: boolean;
+  startTime?: string;
+  endTime?: string;
+}
 
 interface VetProps {
   userId: string;
   name: string;
   address?: string;
   phone?: string;
-  workHours?: string;
+  workHours?: VetWorkHoursProps[];
   googleMapsUrl?: string;
   rating?: number;
   notes?: string;
@@ -18,7 +26,7 @@ export class Vet extends Entity<VetProps> {
   get name(): string { return this.props.name; }
   get address(): string | undefined { return this.props.address; }
   get phone(): string | undefined { return this.props.phone; }
-  get workHours(): string | undefined { return this.props.workHours; }
+  get workHours(): VetWorkHoursProps[] | undefined { return this.props.workHours; }
   get googleMapsUrl(): string | undefined { return this.props.googleMapsUrl; }
   get rating(): number | undefined { return this.props.rating; }
   get notes(): string | undefined { return this.props.notes; }
