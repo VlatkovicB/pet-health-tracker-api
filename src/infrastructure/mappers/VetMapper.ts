@@ -1,7 +1,17 @@
+// pet-health-tracker-api/src/infrastructure/mappers/VetMapper.ts
 import { Service } from 'typedi';
+import { v4 as uuidv4 } from 'uuid';
 import { VetModel } from '../db/models/VetModel';
-import { Vet } from '../../domain/vet/Vet';
+import { Vet, VetWorkHoursProps } from '../../domain/vet/Vet';
 import { UniqueEntityId } from '../../domain/shared/UniqueEntityId';
+import type { DayOfWeek } from '../../domain/health/value-objects/ReminderSchedule';
+
+export interface WorkHoursDayDto {
+  dayOfWeek: string;
+  open: boolean;
+  startTime?: string;
+  endTime?: string;
+}
 
 export interface VetResponseDto {
   id: string;
@@ -9,7 +19,7 @@ export interface VetResponseDto {
   name: string;
   address?: string;
   phone?: string;
-  workHours?: string;
+  workHours?: WorkHoursDayDto[];
   googleMapsUrl?: string;
   rating?: number;
   notes?: string;
@@ -25,6 +35,12 @@ export class VetMapper {
         name: model.name,
         address: model.address ?? undefined,
         phone: model.phone ?? undefined,
+        workHours: (model.workHours ?? []).map((wh) => ({
+          dayOfWeek: wh.dayOfWeek as DayOfWeek,
+          open: wh.open,
+          startTime: wh.startTime ?? undefined,
+          endTime: wh.endTime ?? undefined,
+        })),
         googleMapsUrl: model.googleMapsUrl ?? undefined,
         rating: model.rating ?? undefined,
         notes: model.notes ?? undefined,
@@ -48,6 +64,17 @@ export class VetMapper {
     };
   }
 
+  toWorkHoursPersistence(vetId: string, hours: VetWorkHoursProps[]): object[] {
+    return hours.map((wh) => ({
+      id: uuidv4(),
+      vetId,
+      dayOfWeek: wh.dayOfWeek,
+      open: wh.open,
+      startTime: wh.open ? (wh.startTime ?? null) : null,
+      endTime: wh.open ? (wh.endTime ?? null) : null,
+    }));
+  }
+
   toResponse(vet: Vet): VetResponseDto {
     return {
       id: vet.id.toValue(),
@@ -55,7 +82,12 @@ export class VetMapper {
       name: vet.name,
       address: vet.address,
       phone: vet.phone,
-      workHours: vet.workHours,
+      workHours: vet.workHours?.map((wh) => ({
+        dayOfWeek: wh.dayOfWeek,
+        open: wh.open,
+        startTime: wh.startTime,
+        endTime: wh.endTime,
+      })),
       googleMapsUrl: vet.googleMapsUrl,
       rating: vet.rating,
       notes: vet.notes,
