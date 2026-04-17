@@ -26,6 +26,9 @@ export class VetModel extends Model {
   @Column({ type: DataType.STRING, allowNull: true, field: 'google_maps_url' })
   declare googleMapsUrl: string | null;
 
+  @Column({ type: DataType.FLOAT, allowNull: true })
+  declare rating: number | null;
+
   @Column({ type: DataType.TEXT, allowNull: true })
   declare notes: string | null;
 

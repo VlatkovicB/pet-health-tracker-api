@@ -11,6 +11,7 @@ export interface VetResponseDto {
   phone?: string;
   workHours?: string;
   googleMapsUrl?: string;
+  rating?: number;
   notes?: string;
   createdAt: string;
 }
@@ -26,6 +27,7 @@ export class VetMapper {
         phone: model.phone ?? undefined,
         workHours: model.workHours ?? undefined,
         googleMapsUrl: model.googleMapsUrl ?? undefined,
+        rating: model.rating ?? undefined,
         notes: model.notes ?? undefined,
         createdAt: model.createdAt,
       },
@@ -42,6 +44,7 @@ export class VetMapper {
       phone: vet.phone ?? null,
       workHours: vet.workHours ?? null,
       googleMapsUrl: vet.googleMapsUrl ?? null,
+      rating: vet.rating ?? null,
       notes: vet.notes ?? null,
       createdAt: vet.createdAt,
     };
@@ -56,6 +59,7 @@ export class VetMapper {
       phone: vet.phone,
       workHours: vet.workHours,
       googleMapsUrl: vet.googleMapsUrl,
+      rating: vet.rating,
       notes: vet.notes,
       createdAt: vet.createdAt.toISOString(),
     };

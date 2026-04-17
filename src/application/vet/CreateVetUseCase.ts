@@ -8,6 +8,7 @@ interface CreateVetInput {
   phone?: string;
   workHours?: string;
   googleMapsUrl?: string;
+  rating?: number;
   notes?: string;
   requestingUserId: string;
 }
@@ -26,6 +27,7 @@ export class CreateVetUseCase {
       phone: input.phone,
       workHours: input.workHours,
       googleMapsUrl: input.googleMapsUrl,
+      rating: input.rating,
       notes: input.notes,
     });
 
