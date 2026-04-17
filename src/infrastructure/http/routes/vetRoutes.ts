@@ -9,6 +9,7 @@ export function vetRoutes(): Router {
 
   router.get('/', authMiddleware, controller.list);
   router.post('/', authMiddleware, controller.create);
+  router.put('/:id', authMiddleware, controller.update);
 
   return router;
 }

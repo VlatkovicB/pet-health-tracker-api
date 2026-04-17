@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { Service } from 'typedi';
 import { CreateVetUseCase } from '../../../application/vet/CreateVetUseCase';
 import { ListVetsUseCase } from '../../../application/vet/ListVetsUseCase';
+import { UpdateVetUseCase } from '../../../application/vet/UpdateVetUseCase';
 import { VetMapper } from '../../mappers/VetMapper';
 
 @Service()
@@ -9,6 +10,7 @@ export class VetController {
   constructor(
     private readonly createVet: CreateVetUseCase,
     private readonly listVets: ListVetsUseCase,
+    private readonly updateVet: UpdateVetUseCase,
     private readonly mapper: VetMapper,
   ) {}
 
@@ -30,6 +32,19 @@ export class VetController {
         requestingUserId: req.auth.userId,
       });
       res.status(201).json(this.mapper.toResponse(vet));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const vet = await this.updateVet.execute({
+        vetId: req.params.id,
+        ...req.body,
+        requestingUserId: req.auth.userId,
+      });
+      res.json(this.mapper.toResponse(vet));
     } catch (err) {
       next(err);
     }

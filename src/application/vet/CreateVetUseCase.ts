@@ -1,12 +1,12 @@
 import { Inject, Service } from 'typedi';
 import { VetRepository, VET_REPOSITORY } from '../../domain/vet/VetRepository';
-import { Vet } from '../../domain/vet/Vet';
+import { Vet, VetWorkHoursProps } from '../../domain/vet/Vet';
 
 interface CreateVetInput {
   name: string;
   address?: string;
   phone?: string;
-  workHours?: string;
+  workHours?: VetWorkHoursProps[];
   googleMapsUrl?: string;
   rating?: number;
   notes?: string;
