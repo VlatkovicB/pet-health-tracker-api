@@ -1,5 +1,6 @@
 import { Service } from 'typedi';
 import { VetModel } from '../models/VetModel';
+import { VetWorkHoursModel } from '../models/VetWorkHoursModel';
 import { VetRepository } from '../../../domain/vet/VetRepository';
 import { Vet } from '../../../domain/vet/Vet';
 import { VetMapper } from '../../mappers/VetMapper';
@@ -10,7 +11,7 @@ export class SequelizeVetRepository implements VetRepository {
   constructor(private readonly mapper: VetMapper) {}
 
   async findById(id: string): Promise<Vet | null> {
-    const model = await VetModel.findByPk(id);
+    const model = await VetModel.findByPk(id, { include: [VetWorkHoursModel] });
     return model ? this.mapper.toDomain(model) : null;
   }
 
@@ -19,6 +20,7 @@ export class SequelizeVetRepository implements VetRepository {
       where: { userId },
       limit,
       offset: (page - 1) * limit,
+      include: [VetWorkHoursModel],
     });
     const offset = (page - 1) * limit;
     return {
@@ -30,5 +32,12 @@ export class SequelizeVetRepository implements VetRepository {
 
   async save(vet: Vet): Promise<void> {
     await VetModel.upsert(this.mapper.toPersistence(vet) as any);
+    await VetWorkHoursModel.destroy({ where: { vetId: vet.id.toValue() } });
+    const hours = vet.workHours ?? [];
+    if (hours.length > 0) {
+      await VetWorkHoursModel.bulkCreate(
+        this.mapper.toWorkHoursPersistence(vet.id.toValue(), hours) as any[],
+      );
+    }
   }
 }
