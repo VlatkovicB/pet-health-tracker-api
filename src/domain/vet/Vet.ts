@@ -8,6 +8,7 @@ interface VetProps {
   phone?: string;
   workHours?: string;
   googleMapsUrl?: string;
+  rating?: number;
   notes?: string;
   createdAt: Date;
 }
@@ -19,6 +20,7 @@ export class Vet extends Entity<VetProps> {
   get phone(): string | undefined { return this.props.phone; }
   get workHours(): string | undefined { return this.props.workHours; }
   get googleMapsUrl(): string | undefined { return this.props.googleMapsUrl; }
+  get rating(): number | undefined { return this.props.rating; }
   get notes(): string | undefined { return this.props.notes; }
   get createdAt(): Date { return this.props.createdAt; }
 
