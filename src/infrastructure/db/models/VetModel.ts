@@ -27,6 +27,9 @@ export class VetModel extends Model {
   @Column({ type: DataType.FLOAT, allowNull: true })
   declare rating: number | null;
 
+  @Column({ type: DataType.STRING, allowNull: true, field: 'place_id' })
+  declare placeId: string | null;
+
   @Column({ type: DataType.TEXT, allowNull: true })
   declare notes: string | null;
 

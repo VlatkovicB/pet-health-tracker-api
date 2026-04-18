@@ -9,6 +9,7 @@ interface CreateVetInput {
   workHours?: VetWorkHoursProps[];
   googleMapsUrl?: string;
   rating?: number;
+  placeId?: string;
   notes?: string;
   requestingUserId: string;
 }
@@ -28,6 +29,7 @@ export class CreateVetUseCase {
       workHours: input.workHours,
       googleMapsUrl: input.googleMapsUrl,
       rating: input.rating,
+      placeId: input.placeId,
       notes: input.notes,
     });
 

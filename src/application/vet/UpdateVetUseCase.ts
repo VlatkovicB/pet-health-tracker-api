@@ -10,6 +10,7 @@ interface UpdateVetInput {
   workHours?: VetWorkHoursProps[];
   googleMapsUrl?: string;
   rating?: number;
+  placeId?: string;
   notes?: string;
   requestingUserId: string;
 }
@@ -42,6 +43,7 @@ export class UpdateVetUseCase {
         workHours: input.workHours ?? vet.workHours,
         googleMapsUrl: input.googleMapsUrl ?? vet.googleMapsUrl,
         rating: input.rating ?? vet.rating,
+        placeId: input.placeId ?? vet.placeId,
         notes: input.notes ?? vet.notes,
         createdAt: vet.createdAt,
       },

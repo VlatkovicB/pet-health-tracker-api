@@ -17,6 +17,7 @@ interface VetProps {
   workHours?: VetWorkHoursProps[];
   googleMapsUrl?: string;
   rating?: number;
+  placeId?: string;
   notes?: string;
   createdAt: Date;
 }
@@ -29,6 +30,7 @@ export class Vet extends Entity<VetProps> {
   get workHours(): VetWorkHoursProps[] | undefined { return this.props.workHours; }
   get googleMapsUrl(): string | undefined { return this.props.googleMapsUrl; }
   get rating(): number | undefined { return this.props.rating; }
+  get placeId(): string | undefined { return this.props.placeId; }
   get notes(): string | undefined { return this.props.notes; }
   get createdAt(): Date { return this.props.createdAt; }
 
