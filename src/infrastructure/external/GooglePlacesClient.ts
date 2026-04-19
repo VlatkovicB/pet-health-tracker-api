@@ -1,4 +1,5 @@
 import { Service } from 'typedi';
+import type { VetWorkHoursProps } from '../../domain/vet/Vet';
 
 export interface PlaceSearchResult {
   placeId: string;
@@ -10,9 +11,48 @@ export interface PlaceDetails {
   name: string;
   address: string;
   phone?: string;
-  workHours?: string;
+  workHours?: VetWorkHoursProps[];
   rating?: number;
   googleMapsUrl?: string;
+}
+
+type DayOfWeek = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';
+
+const DAY_MAP: DayOfWeek[] = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+function toTime(hour: number, minute: number): string {
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
+function parseWorkHourPeriods(
+  periods: Array<{
+    open: { day: number; hour: number; minute: number };
+    close?: { day: number; hour: number; minute: number };
+  }>,
+): VetWorkHoursProps[] {
+  // 24/7 places: single period, opens Sunday 00:00, no close time
+  const is24_7 =
+    periods.length === 1 &&
+    periods[0].open.day === 0 &&
+    periods[0].open.hour === 0 &&
+    periods[0].open.minute === 0 &&
+    !periods[0].close;
+
+  if (is24_7) {
+    return DAY_MAP.map((dayOfWeek) => ({ dayOfWeek, open: true, startTime: '00:00', endTime: '23:59' }));
+  }
+
+  const byDay = new Map<number, { startTime: string; endTime: string }>();
+  for (const p of periods) {
+    byDay.set(p.open.day, {
+      startTime: toTime(p.open.hour, p.open.minute),
+      endTime: p.close ? toTime(p.close.hour, p.close.minute) : '23:59',
+    });
+  }
+  return DAY_MAP.map((dayOfWeek, i) => {
+    const times = byDay.get(i);
+    return times ? { dayOfWeek, open: true, ...times } : { dayOfWeek, open: false };
+  });
 }
 
 @Service()
@@ -52,7 +92,7 @@ export class GooglePlacesClient {
       'formattedAddress',
       'internationalPhoneNumber',
       'rating',
-      'regularOpeningHours',
+      'regularOpeningHours.periods',
       'googleMapsUri',
     ].join(',');
 
@@ -72,17 +112,22 @@ export class GooglePlacesClient {
       formattedAddress?: string;
       internationalPhoneNumber?: string;
       rating?: number;
-      regularOpeningHours?: { weekdayDescriptions?: string[] };
+      regularOpeningHours?: {
+        periods?: Array<{
+          open: { day: number; hour: number; minute: number };
+          close?: { day: number; hour: number; minute: number };
+        }>;
+      };
       googleMapsUri?: string;
     };
 
-    const weekdays = p.regularOpeningHours?.weekdayDescriptions ?? [];
+    const periods = p.regularOpeningHours?.periods ?? [];
 
     return {
       name: p.displayName?.text ?? '',
       address: p.formattedAddress ?? '',
       phone: p.internationalPhoneNumber,
-      workHours: weekdays.length > 0 ? weekdays.join('\n') : undefined,
+      workHours: periods.length > 0 ? parseWorkHourPeriods(periods) : undefined,
       rating: p.rating,
       googleMapsUrl: p.googleMapsUri,
     };
