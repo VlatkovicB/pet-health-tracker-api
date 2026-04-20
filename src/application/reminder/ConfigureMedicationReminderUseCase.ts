@@ -2,15 +2,14 @@ import { Inject, Service } from 'typedi';
 import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../domain/health/HealthRecordRepository';
 import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
 import { ReminderRepository, REMINDER_REPOSITORY } from '../../domain/reminder/ReminderRepository';
-import { Reminder } from '../../domain/reminder/Reminder';
-import { ReminderSchedule, ReminderScheduleProps } from '../../domain/health/value-objects/ReminderSchedule';
+import { Reminder, AdvanceNotice } from '../../domain/reminder/Reminder';
 import { ForbiddenError, NotFoundError } from '../../shared/errors/AppError';
 import { ReminderSchedulerService } from '../../infrastructure/queue/ReminderSchedulerService';
 
 interface ConfigureReminderInput {
   medicationId: string;
-  schedule: ReminderScheduleProps;
   enabled: boolean;
+  advanceNotice?: AdvanceNotice;
   requestingUserId: string;
 }
 
@@ -31,21 +30,20 @@ export class ConfigureMedicationReminderUseCase {
     if (!pet) throw new NotFoundError('Pet');
     if (pet.userId !== input.requestingUserId) throw new ForbiddenError('Not your pet');
 
-    const schedule = ReminderSchedule.create(input.schedule);
-
     const existing = await this.reminderRepo.findByEntityId(input.medicationId);
 
     let reminder: Reminder;
     if (existing) {
-      existing.updateSchedule(schedule);
       existing.toggle(input.enabled);
+      existing.updateAdvanceNotice(input.advanceNotice);
       reminder = existing;
     } else {
       reminder = Reminder.create({
         entityType: 'medication',
         entityId: input.medicationId,
-        schedule,
+        schedule: medication.schedule,
         enabled: input.enabled,
+        advanceNotice: input.advanceNotice,
         notifyUserIds: [input.requestingUserId],
         createdBy: input.requestingUserId,
       });
