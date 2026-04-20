@@ -1,6 +1,11 @@
 import { ValueObject } from '../../shared/ValueObject';
 import { ValidationError } from '../../../shared/errors/AppError';
 
+export interface AdvanceNotice {
+  amount: number;
+  unit: 'minutes' | 'hours' | 'days';
+}
+
 export type DayOfWeek = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';
 
 const DAY_CRON: Record<DayOfWeek, number> = {
@@ -14,7 +19,6 @@ export type MonthlySchedule = { type: 'monthly'; daysOfMonth: number[]; times: s
 export type ReminderScheduleProps = DailySchedule | WeeklySchedule | MonthlySchedule;
 
 function validateTimes(times: string[]): void {
-  // Deduplicate times to prevent duplicate schedulers
   const uniqueTimes = Array.from(new Set(times));
   if (!uniqueTimes.length) throw new ValidationError('times must not be empty');
   for (const t of uniqueTimes) {
@@ -23,6 +27,28 @@ function validateTimes(times: string[]): void {
     if (h < 0 || h > 23) throw new ValidationError(`Invalid hour: ${h}`);
     if (m < 0 || m > 59) throw new ValidationError(`Invalid minute: ${m}`);
   }
+}
+
+/** Subtract advanceNotice from a HH:MM time string. Returns { time: 'HH:MM', dayOffset: -1 | 0 }. */
+function applyOffset(time: string, notice: AdvanceNotice): { time: string; dayOffset: number } {
+  const [h, m] = time.split(':').map(Number);
+  let totalMinutes = h * 60 + m;
+
+  switch (notice.unit) {
+    case 'minutes': totalMinutes -= notice.amount; break;
+    case 'hours':   totalMinutes -= notice.amount * 60; break;
+    case 'days':    totalMinutes -= notice.amount * 24 * 60; break;
+  }
+
+  let dayOffset = 0;
+  if (totalMinutes < 0) {
+    dayOffset = -1;
+    totalMinutes += 24 * 60;
+  }
+
+  const hh = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+  const mm = String(totalMinutes % 60).padStart(2, '0');
+  return { time: `${hh}:${mm}`, dayOffset };
 }
 
 export class ReminderSchedule extends ValueObject<ReminderScheduleProps> {
@@ -41,25 +67,60 @@ export class ReminderSchedule extends ValueObject<ReminderScheduleProps> {
     return { ...this.props } as ReminderScheduleProps;
   }
 
-  toCronExpressions(): string[] {
+  toCronExpressions(advanceNotice?: AdvanceNotice): string[] {
     const p = this.props;
+
+    if (!advanceNotice) {
+      switch (p.type) {
+        case 'daily':
+          return p.times.map((t) => {
+            const [h, m] = t.split(':');
+            return `${Number(m)} ${Number(h)} * * *`;
+          });
+        case 'weekly': {
+          const dayPart = p.days.map((d) => DAY_CRON[d]).join(',');
+          return p.times.map((t) => {
+            const [h, m] = t.split(':');
+            return `${Number(m)} ${Number(h)} * * ${dayPart}`;
+          });
+        }
+        case 'monthly': {
+          const domPart = p.daysOfMonth.join(',');
+          return p.times.map((t) => {
+            const [h, m] = t.split(':');
+            return `${Number(m)} ${Number(h)} ${domPart} * *`;
+          });
+        }
+        default:
+          throw new ValidationError(`Unknown schedule type: ${(p as any).type}`);
+      }
+    }
+
     switch (p.type) {
       case 'daily':
         return p.times.map((t) => {
-          const [h, m] = t.split(':');
+          const { time } = applyOffset(t, advanceNotice);
+          const [h, m] = time.split(':');
           return `${Number(m)} ${Number(h)} * * *`;
         });
       case 'weekly': {
-        const dayPart = p.days.map((d) => DAY_CRON[d]).join(',');
+        const days = p.days.map((d) => DAY_CRON[d]);
         return p.times.map((t) => {
-          const [h, m] = t.split(':');
-          return `${Number(m)} ${Number(h)} * * ${dayPart}`;
+          const { time, dayOffset } = applyOffset(t, advanceNotice);
+          const [h, m] = time.split(':');
+          const adjustedDays = dayOffset === 0
+            ? days
+            : days.map((d) => ((d + 7 + dayOffset) % 7));
+          return `${Number(m)} ${Number(h)} * * ${adjustedDays.join(',')}`;
         });
       }
       case 'monthly': {
-        const domPart = p.daysOfMonth.join(',');
         return p.times.map((t) => {
-          const [h, m] = t.split(':');
+          const { time, dayOffset } = applyOffset(t, advanceNotice);
+          const [h, m] = time.split(':');
+          const domPart = dayOffset === 0
+            ? p.daysOfMonth.join(',')
+            : p.daysOfMonth.map((d) => Math.max(1, d + dayOffset)).join(',');
           return `${Number(m)} ${Number(h)} ${domPart} * *`;
         });
       }

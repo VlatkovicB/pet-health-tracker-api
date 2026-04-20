@@ -1,6 +1,13 @@
 import { VetVisit } from './VetVisit';
 import { Medication } from './Medication';
 import { PaginationParams, PaginatedResult } from '../../shared/types/Pagination';
+import type { AdvanceNotice } from '../reminder/Reminder';
+
+export interface MedicationSummary {
+  medication: Medication;
+  reminderEnabled: boolean;
+  advanceNotice?: AdvanceNotice;
+}
 
 export interface HealthRecordRepository {
   // Vet visits
@@ -12,7 +19,7 @@ export interface HealthRecordRepository {
 
   // Medications
   findMedicationById(id: string): Promise<Medication | null>;
-  findMedicationsByPetId(petId: string): Promise<Medication[]>;
+  findMedicationsByPetId(petId: string): Promise<MedicationSummary[]>;
   findActiveMedications(): Promise<Medication[]>;
   saveMedication(medication: Medication): Promise<void>;
 }

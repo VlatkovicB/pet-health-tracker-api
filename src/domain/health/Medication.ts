@@ -1,13 +1,13 @@
 import { Entity } from '../shared/Entity';
 import { UniqueEntityId } from '../shared/UniqueEntityId';
 import { Dosage } from './value-objects/Dosage';
-import { FrequencySchedule } from './value-objects/FrequencySchedule';
+import { ReminderSchedule } from './value-objects/ReminderSchedule';
 
 interface MedicationProps {
   petId: string;
   name: string;
   dosage: Dosage;
-  frequency: FrequencySchedule;
+  schedule: ReminderSchedule;
   startDate: Date;
   endDate?: Date;
   notes?: string;
@@ -20,7 +20,7 @@ export class Medication extends Entity<MedicationProps> {
   get petId(): string { return this.props.petId; }
   get name(): string { return this.props.name; }
   get dosage(): Dosage { return this.props.dosage; }
-  get frequency(): FrequencySchedule { return this.props.frequency; }
+  get schedule(): ReminderSchedule { return this.props.schedule; }
   get startDate(): Date { return this.props.startDate; }
   get endDate(): Date | undefined { return this.props.endDate; }
   get notes(): string | undefined { return this.props.notes; }

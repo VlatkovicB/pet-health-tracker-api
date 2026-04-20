@@ -1,14 +1,17 @@
 import { Entity } from '../shared/Entity';
 import { UniqueEntityId } from '../shared/UniqueEntityId';
-import { ReminderSchedule } from '../health/value-objects/ReminderSchedule';
+import { ReminderSchedule, AdvanceNotice } from '../health/value-objects/ReminderSchedule';
 
 export type ReminderEntityType = 'medication' | 'vet_visit';
+
+export { AdvanceNotice };
 
 interface ReminderProps {
   entityType: ReminderEntityType;
   entityId: string;
   schedule: ReminderSchedule;
   enabled: boolean;
+  advanceNotice?: AdvanceNotice;
   notifyUserIds: string[];
   createdBy: string;
   createdAt: Date;
@@ -19,6 +22,7 @@ export class Reminder extends Entity<ReminderProps> {
   get entityId(): string { return this.props.entityId; }
   get schedule(): ReminderSchedule { return this.props.schedule; }
   get enabled(): boolean { return this.props.enabled; }
+  get advanceNotice(): AdvanceNotice | undefined { return this.props.advanceNotice; }
   get notifyUserIds(): string[] { return this.props.notifyUserIds; }
   get createdBy(): string { return this.props.createdBy; }
   get createdAt(): Date { return this.props.createdAt; }
@@ -29,6 +33,10 @@ export class Reminder extends Entity<ReminderProps> {
 
   updateSchedule(schedule: ReminderSchedule): void {
     this.props.schedule = schedule;
+  }
+
+  updateAdvanceNotice(advanceNotice: AdvanceNotice | undefined): void {
+    this.props.advanceNotice = advanceNotice;
   }
 
   static create(
