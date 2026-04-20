@@ -166,8 +166,7 @@ type MedTemplate = {
   name: string;
   dosageAmount: number;
   dosageUnit: string;
-  frequencyType: 'hourly' | 'daily' | 'weekly' | 'monthly';
-  frequencyInterval: number;
+  schedule: { type: 'daily' | 'weekly' | 'monthly'; times: string[]; days?: string[]; daysOfMonth?: number[] };
   startDate: Date;
   endDate: Date | null;
   active: boolean;
@@ -177,33 +176,33 @@ type MedTemplate = {
 const MED_TEMPLATES: MedTemplate[][] = [
   // Biscuit
   [
-    { name: 'Apoquel',        dosageAmount: 16,  dosageUnit: 'mg',     frequencyType: 'daily',   frequencyInterval: 1, startDate: monthsAgo(4),  endDate: null,          active: true,  notes: 'For seasonal allergies' },
-    { name: 'Carprofen',      dosageAmount: 75,  dosageUnit: 'mg',     frequencyType: 'daily',   frequencyInterval: 2, startDate: monthsAgo(18), endDate: monthsAgo(16), active: false, notes: 'Prescribed after sprain' },
-    { name: 'Simparica Trio', dosageAmount: 1,   dosageUnit: 'tablet', frequencyType: 'monthly', frequencyInterval: 1, startDate: monthsAgo(12), endDate: null,          active: true,  notes: 'Flea, tick and heartworm prevention' },
+    { name: 'Apoquel',        dosageAmount: 16,  dosageUnit: 'mg',     schedule: { type: 'daily', times: ['08:00'] },                                         startDate: monthsAgo(4),  endDate: null,          active: true,  notes: 'For seasonal allergies' },
+    { name: 'Carprofen',      dosageAmount: 75,  dosageUnit: 'mg',     schedule: { type: 'daily', times: ['08:00', '20:00'] },                              startDate: monthsAgo(18), endDate: monthsAgo(16), active: false, notes: 'Prescribed after sprain' },
+    { name: 'Simparica Trio', dosageAmount: 1,   dosageUnit: 'tablet', schedule: { type: 'monthly', times: ['08:00'], daysOfMonth: [1] },                   startDate: monthsAgo(12), endDate: null,          active: true,  notes: 'Flea, tick and heartworm prevention' },
   ],
   // Luna
   [
-    { name: 'L-Lysine',        dosageAmount: 500, dosageUnit: 'mg',      frequencyType: 'daily',   frequencyInterval: 2, startDate: monthsAgo(8),  endDate: null,          active: true,  notes: 'Herpesvirus management — add to food' },
-    { name: 'Metronidazole',   dosageAmount: 50,  dosageUnit: 'mg',      frequencyType: 'daily',   frequencyInterval: 2, startDate: monthsAgo(14), endDate: monthsAgo(13), active: false, notes: 'Short course for GI upset' },
-    { name: 'Revolution Plus', dosageAmount: 1,   dosageUnit: 'pipette', frequencyType: 'monthly', frequencyInterval: 1, startDate: monthsAgo(6),  endDate: null,          active: true,  notes: 'Topical parasite prevention' },
+    { name: 'L-Lysine',        dosageAmount: 500, dosageUnit: 'mg',      schedule: { type: 'daily', times: ['08:00', '20:00'] },                             startDate: monthsAgo(8),  endDate: null,          active: true,  notes: 'Herpesvirus management — add to food' },
+    { name: 'Metronidazole',   dosageAmount: 50,  dosageUnit: 'mg',      schedule: { type: 'daily', times: ['08:00', '20:00'] },                             startDate: monthsAgo(14), endDate: monthsAgo(13), active: false, notes: 'Short course for GI upset' },
+    { name: 'Revolution Plus', dosageAmount: 1,   dosageUnit: 'pipette', schedule: { type: 'monthly', times: ['08:00'], daysOfMonth: [1] },                 startDate: monthsAgo(6),  endDate: null,          active: true,  notes: 'Topical parasite prevention' },
   ],
   // Peanut
   [
-    { name: 'Apoquel',        dosageAmount: 5.4, dosageUnit: 'mg',     frequencyType: 'daily',   frequencyInterval: 1, startDate: monthsAgo(2),  endDate: null,          active: true,  notes: 'Allergy management — reassess in 2 months' },
-    { name: 'Doxycycline',    dosageAmount: 100, dosageUnit: 'mg',     frequencyType: 'daily',   frequencyInterval: 2, startDate: monthsAgo(10), endDate: monthsAgo(9),  active: false, notes: 'Kennel cough treatment' },
-    { name: 'Seresto collar', dosageAmount: 1,   dosageUnit: 'collar', frequencyType: 'monthly', frequencyInterval: 8, startDate: monthsAgo(5),  endDate: null,          active: true,  notes: 'Tick prevention' },
+    { name: 'Apoquel',        dosageAmount: 5.4, dosageUnit: 'mg',     schedule: { type: 'daily', times: ['08:00'] },                                         startDate: monthsAgo(2),  endDate: null,          active: true,  notes: 'Allergy management — reassess in 2 months' },
+    { name: 'Doxycycline',    dosageAmount: 100, dosageUnit: 'mg',     schedule: { type: 'daily', times: ['08:00', '20:00'] },                              startDate: monthsAgo(10), endDate: monthsAgo(9),  active: false, notes: 'Kennel cough treatment' },
+    { name: 'Seresto collar', dosageAmount: 1,   dosageUnit: 'collar', schedule: { type: 'monthly', times: ['08:00'], daysOfMonth: [8] },                   startDate: monthsAgo(5),  endDate: null,          active: true,  notes: 'Tick prevention' },
   ],
   // Whiskers
   [
-    { name: 'L-Lysine',        dosageAmount: 250, dosageUnit: 'mg',   frequencyType: 'daily',  frequencyInterval: 1, startDate: monthsAgo(9), endDate: null, active: true, notes: 'Herpesvirus — mixed into wet food' },
-    { name: 'Ofloxacin drops', dosageAmount: 1,   dosageUnit: 'drop', frequencyType: 'hourly', frequencyInterval: 8, startDate: daysAgo(8),   endDate: null, active: true, notes: 'Eye drops — right eye ulcer' },
-    { name: 'Purina Calming',  dosageAmount: 1,   dosageUnit: 'tablet', frequencyType: 'daily', frequencyInterval: 1, startDate: monthsAgo(5), endDate: null, active: true, notes: 'Stress reduction supplement' },
+    { name: 'L-Lysine',        dosageAmount: 250, dosageUnit: 'mg',   schedule: { type: 'daily', times: ['08:00'] },                                        startDate: monthsAgo(9), endDate: null, active: true, notes: 'Herpesvirus — mixed into wet food' },
+    { name: 'Ofloxacin drops', dosageAmount: 1,   dosageUnit: 'drop', schedule: { type: 'daily', times: ['00:00', '08:00', '16:00'] },                      startDate: daysAgo(8),   endDate: null, active: true, notes: 'Eye drops — right eye ulcer' },
+    { name: 'Purina Calming',  dosageAmount: 1,   dosageUnit: 'tablet', schedule: { type: 'daily', times: ['08:00'] },                                     startDate: monthsAgo(5), endDate: null, active: true, notes: 'Stress reduction supplement' },
   ],
   // Max
   [
-    { name: 'Librela',     dosageAmount: 1,   dosageUnit: 'injection', frequencyType: 'monthly', frequencyInterval: 1, startDate: monthsAgo(3),  endDate: null, active: true, notes: 'Monoclonal antibody — hip arthritis pain' },
-    { name: 'Carprofen',   dosageAmount: 100, dosageUnit: 'mg',        frequencyType: 'daily',   frequencyInterval: 1, startDate: monthsAgo(7),  endDate: null, active: true, notes: 'For flare-ups after strenuous exercise' },
-    { name: 'Cosequin DS', dosageAmount: 1,   dosageUnit: 'tablet',    frequencyType: 'daily',   frequencyInterval: 1, startDate: monthsAgo(12), endDate: null, active: true, notes: 'Joint supplement — glucosamine + chondroitin' },
+    { name: 'Librela',     dosageAmount: 1,   dosageUnit: 'injection', schedule: { type: 'monthly', times: ['08:00'], daysOfMonth: [1] },                   startDate: monthsAgo(3),  endDate: null, active: true, notes: 'Monoclonal antibody — hip arthritis pain' },
+    { name: 'Carprofen',   dosageAmount: 100, dosageUnit: 'mg',        schedule: { type: 'daily', times: ['08:00'] },                                      startDate: monthsAgo(7),  endDate: null, active: true, notes: 'For flare-ups after strenuous exercise' },
+    { name: 'Cosequin DS', dosageAmount: 1,   dosageUnit: 'tablet',    schedule: { type: 'daily', times: ['08:00'] },                                      startDate: monthsAgo(12), endDate: null, active: true, notes: 'Joint supplement — glucosamine + chondroitin' },
   ],
 ];
 
@@ -299,21 +298,20 @@ async function main() {
     // medications
     for (const m of MED_TEMPLATES[pi]) {
       await MedicationModel.create({
-        id:                uuid(),
+        id:        uuid(),
         petId,
-        name:              m.name,
-        dosageAmount:      m.dosageAmount,
-        dosageUnit:        m.dosageUnit,
-        frequencyType:     m.frequencyType,
-        frequencyInterval: m.frequencyInterval,
-        startDate:         m.startDate,
-        endDate:           m.endDate,
-        notes:             m.notes,
-        active:            m.active,
-        createdBy:         userId,
-        createdAt:         m.startDate,
+        name:      m.name,
+        dosageAmount: m.dosageAmount,
+        dosageUnit: m.dosageUnit,
+        schedule:  m.schedule,
+        startDate: m.startDate,
+        endDate:   m.endDate,
+        notes:     m.notes,
+        active:    m.active,
+        createdBy: userId,
+        createdAt: m.startDate,
       });
-      console.log(`  Med: ${m.name} ${m.dosageAmount} ${m.dosageUnit} (${m.frequencyInterval}× ${m.frequencyType})`);
+      console.log(`  Med: ${m.name} ${m.dosageAmount} ${m.dosageUnit} (${m.schedule.type} ${m.schedule.times.join(', ')})`);
     }
   }
 
