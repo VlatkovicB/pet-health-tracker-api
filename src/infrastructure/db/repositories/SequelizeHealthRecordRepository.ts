@@ -2,8 +2,9 @@ import { Service } from 'typedi';
 import { Op } from 'sequelize';
 import { VetVisitModel } from '../models/VetVisitModel';
 import { MedicationModel } from '../models/MedicationModel';
+import { ReminderModel } from '../models/ReminderModel';
 import { PetModel } from '../models/PetModel';
-import { HealthRecordRepository } from '../../../domain/health/HealthRecordRepository';
+import { HealthRecordRepository, MedicationSummary } from '../../../domain/health/HealthRecordRepository';
 import { VetVisit } from '../../../domain/health/VetVisit';
 import { Medication } from '../../../domain/health/Medication';
 import { VetVisitMapper } from '../../mappers/VetVisitMapper';
@@ -79,9 +80,24 @@ export class SequelizeHealthRecordRepository implements HealthRecordRepository {
     return model ? this.medicationMapper.toDomain(model) : null;
   }
 
-  async findMedicationsByPetId(petId: string): Promise<Medication[]> {
+  async findMedicationsByPetId(petId: string): Promise<MedicationSummary[]> {
     const models = await MedicationModel.findAll({ where: { petId } });
-    return models.map((m) => this.medicationMapper.toDomain(m));
+    if (models.length === 0) return [];
+
+    const ids = models.map((m) => m.id);
+    const reminderModels = await ReminderModel.findAll({
+      where: { entityType: 'medication', entityId: ids },
+    });
+    const reminderMap = new Map(reminderModels.map((r) => [r.entityId, r]));
+
+    return models.map((m) => {
+      const reminder = reminderMap.get(m.id);
+      return {
+        medication: this.medicationMapper.toDomain(m),
+        reminderEnabled: reminder?.enabled ?? false,
+        advanceNotice: reminder?.advanceNotice ?? undefined,
+      };
+    });
   }
 
   async findActiveMedications(): Promise<Medication[]> {
