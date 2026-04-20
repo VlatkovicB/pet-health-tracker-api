@@ -1,5 +1,6 @@
 import { BelongsTo, Column, DataType, ForeignKey, Model, PrimaryKey, Table } from 'sequelize-typescript';
 import { PetModel } from './PetModel';
+import type { ReminderScheduleProps } from '../../../domain/health/value-objects/ReminderSchedule';
 
 @Table({ tableName: 'medications', timestamps: false })
 export class MedicationModel extends Model {
@@ -20,11 +21,8 @@ export class MedicationModel extends Model {
   @Column({ type: DataType.STRING, allowNull: false, field: 'dosage_unit' })
   declare dosageUnit: string;
 
-  @Column({ type: DataType.STRING, allowNull: false, field: 'frequency_type' })
-  declare frequencyType: string;
-
-  @Column({ type: DataType.INTEGER, allowNull: false, field: 'frequency_interval' })
-  declare frequencyInterval: number;
+  @Column({ type: DataType.JSONB, allowNull: true })
+  declare schedule: ReminderScheduleProps;
 
   @Column({ type: DataType.DATE, allowNull: false, field: 'start_date' })
   declare startDate: Date;
@@ -37,7 +35,6 @@ export class MedicationModel extends Model {
 
   @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: true })
   declare active: boolean;
-
 
   @Column({ type: DataType.UUID, allowNull: false, field: 'created_by' })
   declare createdBy: string;
