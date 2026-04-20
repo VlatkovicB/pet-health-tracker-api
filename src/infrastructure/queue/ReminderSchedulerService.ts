@@ -37,7 +37,7 @@ export class ReminderSchedulerService {
       notifyUserIds: reminder.notifyUserIds,
     };
 
-    const cronExpressions = reminder.schedule.toCronExpressions();
+    const cronExpressions = reminder.schedule.toCronExpressions(reminder.advanceNotice);
     await Promise.all(
       cronExpressions.map((pattern, index) =>
         notificationQueue.upsertJobScheduler(
