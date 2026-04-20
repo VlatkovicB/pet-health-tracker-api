@@ -2,19 +2,22 @@ import { Service } from 'typedi';
 import { MedicationModel } from '../db/models/MedicationModel';
 import { Medication } from '../../domain/health/Medication';
 import { Dosage } from '../../domain/health/value-objects/Dosage';
-import { FrequencySchedule, FrequencyType } from '../../domain/health/value-objects/FrequencySchedule';
+import { ReminderSchedule, ReminderScheduleProps } from '../../domain/health/value-objects/ReminderSchedule';
 import { UniqueEntityId } from '../../domain/shared/UniqueEntityId';
+import type { AdvanceNotice } from '../../domain/reminder/Reminder';
 
 export interface MedicationResponseDto {
   id: string;
   petId: string;
   name: string;
   dosage: { amount: number; unit: string };
-  frequency: { type: FrequencyType; interval: number; label: string };
+  schedule: ReminderScheduleProps;
   startDate: string;
   endDate?: string;
   notes?: string;
   active: boolean;
+  reminderEnabled: boolean;
+  advanceNotice?: AdvanceNotice;
   createdBy: string;
   createdAt: string;
 }
@@ -27,7 +30,7 @@ export class MedicationMapper {
         petId: model.petId,
         name: model.name,
         dosage: Dosage.create(model.dosageAmount, model.dosageUnit as any),
-        frequency: FrequencySchedule.create({ type: model.frequencyType as FrequencyType, interval: model.frequencyInterval }),
+        schedule: ReminderSchedule.create(model.schedule),
         startDate: model.startDate,
         endDate: model.endDate ?? undefined,
         notes: model.notes ?? undefined,
@@ -46,8 +49,7 @@ export class MedicationMapper {
       name: medication.name,
       dosageAmount: medication.dosage.amount,
       dosageUnit: medication.dosage.unit,
-      frequencyType: medication.frequency.type,
-      frequencyInterval: medication.frequency.interval,
+      schedule: medication.schedule.toJSON(),
       startDate: medication.startDate,
       endDate: medication.endDate ?? null,
       notes: medication.notes ?? null,
@@ -57,7 +59,11 @@ export class MedicationMapper {
     };
   }
 
-  toResponse(medication: Medication): MedicationResponseDto {
+  toResponse(
+    medication: Medication,
+    reminderEnabled = false,
+    advanceNotice?: AdvanceNotice,
+  ): MedicationResponseDto {
     return {
       id: medication.id.toValue(),
       petId: medication.petId,
@@ -66,15 +72,13 @@ export class MedicationMapper {
         amount: medication.dosage.amount,
         unit: medication.dosage.unit,
       },
-      frequency: {
-        type: medication.frequency.type,
-        interval: medication.frequency.interval,
-        label: medication.frequency.toLabel(),
-      },
+      schedule: medication.schedule.toJSON(),
       startDate: medication.startDate.toISOString(),
       endDate: medication.endDate?.toISOString(),
       notes: medication.notes,
       active: medication.active,
+      reminderEnabled,
+      advanceNotice,
       createdBy: medication.createdBy,
       createdAt: medication.createdAt.toISOString(),
     };

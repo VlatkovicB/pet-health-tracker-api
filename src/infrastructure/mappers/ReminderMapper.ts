@@ -1,6 +1,6 @@
 import { Service } from 'typedi';
 import { ReminderModel } from '../db/models/ReminderModel';
-import { Reminder, ReminderEntityType } from '../../domain/reminder/Reminder';
+import { Reminder, ReminderEntityType, AdvanceNotice } from '../../domain/reminder/Reminder';
 import { ReminderSchedule, ReminderScheduleProps } from '../../domain/health/value-objects/ReminderSchedule';
 import { UniqueEntityId } from '../../domain/shared/UniqueEntityId';
 
@@ -10,6 +10,7 @@ export interface ReminderResponseDto {
   entityId: string;
   schedule: ReminderScheduleProps;
   enabled: boolean;
+  advanceNotice?: AdvanceNotice;
   notifyUserIds: string[];
   createdAt: string;
 }
@@ -23,6 +24,7 @@ export class ReminderMapper {
         entityId: model.entityId,
         schedule: ReminderSchedule.create(model.schedule),
         enabled: model.enabled,
+        advanceNotice: model.advanceNotice ?? undefined,
         notifyUserIds: (model.notifyUsers ?? []).map((r) => r.userId),
         createdBy: model.createdBy,
         createdAt: model.createdAt,
@@ -38,6 +40,7 @@ export class ReminderMapper {
       entityId: reminder.entityId,
       schedule: reminder.schedule.toJSON(),
       enabled: reminder.enabled,
+      advanceNotice: reminder.advanceNotice ?? null,
       createdBy: reminder.createdBy,
       createdAt: reminder.createdAt,
     };
@@ -50,6 +53,7 @@ export class ReminderMapper {
       entityId: reminder.entityId,
       schedule: reminder.schedule.toJSON(),
       enabled: reminder.enabled,
+      advanceNotice: reminder.advanceNotice,
       notifyUserIds: reminder.notifyUserIds,
       createdAt: reminder.createdAt.toISOString(),
     };
