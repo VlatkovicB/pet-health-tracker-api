@@ -7,6 +7,8 @@ import { VetVisitModel } from './models/VetVisitModel';
 import { MedicationModel } from './models/MedicationModel';
 import { ReminderModel } from './models/ReminderModel';
 import { ReminderNotifyUserModel } from './models/ReminderNotifyUserModel';
+import { NoteModel } from './models/NoteModel';
+import { NotePetTagModel } from './models/NotePetTagModel';
 
 export const sequelize = new Sequelize({
   dialect: 'postgres',
@@ -25,5 +27,7 @@ export const sequelize = new Sequelize({
     MedicationModel,
     ReminderModel,
     ReminderNotifyUserModel,
+    NoteModel,
+    NotePetTagModel,
   ],
 });
