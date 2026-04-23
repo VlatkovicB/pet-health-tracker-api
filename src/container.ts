@@ -4,6 +4,8 @@ import { SequelizePetRepository } from './infrastructure/db/repositories/Sequeli
 import { SequelizeHealthRecordRepository } from './infrastructure/db/repositories/SequelizeHealthRecordRepository';
 import { SequelizeVetRepository } from './infrastructure/db/repositories/SequelizeVetRepository';
 import { SequelizeReminderRepository } from './infrastructure/db/repositories/SequelizeReminderRepository';
+import { SequelizeNoteRepository } from './infrastructure/db/repositories/SequelizeNoteRepository';
+import { NOTE_REPOSITORY } from './domain/note/NoteRepository';
 import { USER_REPOSITORY } from './domain/user/UserRepository';
 import { PET_REPOSITORY } from './domain/pet/PetRepository';
 import { HEALTH_RECORD_REPOSITORY } from './domain/health/HealthRecordRepository';
@@ -16,4 +18,5 @@ export function registerDependencies(): void {
   Container.set(HEALTH_RECORD_REPOSITORY, Container.get(SequelizeHealthRecordRepository));
   Container.set(VET_REPOSITORY, Container.get(SequelizeVetRepository));
   Container.set(REMINDER_REPOSITORY, Container.get(SequelizeReminderRepository));
+  Container.set(NOTE_REPOSITORY, Container.get(SequelizeNoteRepository));
 }
