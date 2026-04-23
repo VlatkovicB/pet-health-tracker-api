@@ -2,7 +2,6 @@ import { Service } from 'typedi';
 import { Note } from '../../domain/note/Note';
 import { UniqueEntityId } from '../../domain/shared/UniqueEntityId';
 import { NoteModel } from '../db/models/NoteModel';
-import { NotePetTagModel } from '../db/models/NotePetTagModel';
 
 export interface NoteResponseDto {
   id: string;
@@ -24,12 +23,24 @@ export class NoteMapper {
         title: model.title,
         description: model.description ?? undefined,
         noteDate: model.noteDate,
-        petIds: (model.petTags ?? []).map((t: NotePetTagModel) => t.petId),
+        petIds: (model.petTags ?? []).map((t) => t.petId),
         imageUrls: model.imageUrls ?? [],
         createdAt: model.createdAt,
       },
       new UniqueEntityId(model.id),
     );
+  }
+
+  toPersistence(note: Note): object {
+    return {
+      id: note.id.toValue(),
+      userId: note.userId,
+      title: note.title,
+      description: note.description ?? null,
+      noteDate: note.noteDate,
+      imageUrls: note.imageUrls,
+      createdAt: note.createdAt,
+    };
   }
 
   toResponse(note: Note): NoteResponseDto {
