@@ -8,6 +8,7 @@ export class NoteModel extends Model {
   @Column(DataType.UUID)
   declare id: string;
 
+  // userId is both the owner scope and the creator — no separate created_by column by design
   @ForeignKey(() => UserModel)
   @Column({ type: DataType.UUID, allowNull: false, field: 'user_id' })
   declare userId: string;
