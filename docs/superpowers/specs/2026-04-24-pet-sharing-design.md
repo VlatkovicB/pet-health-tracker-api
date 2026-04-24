@@ -52,7 +52,7 @@ Constraint: one active share per `(pet_id, invited_email)` — duplicates reject
 
 **`PetShare`** (`domain/share/PetShare.ts`)
 - Props: `petId`, `ownerId`, `sharedWithUserId?`, `invitedEmail`, `status`, permissions (`canViewVetVisits`, `canEditVetVisits`, `canViewMedications`, `canEditMedications`, `canViewNotes`, `canEditNotes`), `createdAt`
-- Methods: `accept()`, `hasPermission(permission: PetPermission): boolean`
+- Methods: `accept()`, `hasPermission(permission: PetPermission): boolean` — `edit_*` grants also satisfy `view_*` checks (e.g. `canEditVetVisits = true` passes a `view_vet_visits` check)
 - Repository: `PetShareRepository` with `findById`, `findByPetId`, `findPendingForUser`, `findByPetIdAndEmail`, `findAcceptedByPetIdAndUserId`, `save`, `delete`
 
 **`PetOwnershipTransfer`** (`domain/transfer/PetOwnershipTransfer.ts`)
@@ -111,7 +111,7 @@ All existing use cases replace their inline `pet.userId !== requestingUserId` gu
 | `ListPendingSharesUseCase` | — | List pending shares for requesting user |
 | `AcceptShareUseCase` | — | Set status → accepted |
 | `DeclineShareUseCase` | — | Delete the share row |
-| `ListSharedPetsUseCase` | — | Pets from all accepted shares for requesting user |
+| `ListSharedPetsUseCase` | — | Pets from all accepted shares for requesting user; response includes pet + share permissions per entry |
 
 ### Transfer management (`application/transfer/`)
 
