@@ -7,7 +7,9 @@
     "dev": "nodemon",
     "build": "tsc",
     "start": "node dist/main.js",
-    "seed": "ts-node -r dotenv/config --project tsconfig.json scripts/seed.ts"
+    "seed": "ts-node -r dotenv/config --project tsconfig.json scripts/seed.ts",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -32,12 +34,15 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.21",
+    "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/multer": "^2.1.0",
     "@types/node": "^20.12.2",
     "@types/nodemailer": "^6.4.14",
     "@types/uuid": "^9.0.8",
+    "jest": "^30.3.0",
     "nodemon": "^3.1.0",
+    "ts-jest": "^29.4.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.3"
   }
