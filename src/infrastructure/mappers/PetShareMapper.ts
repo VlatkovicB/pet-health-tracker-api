@@ -33,7 +33,12 @@ export class PetShareMapper {
         ownerId: model.ownerId,
         sharedWithUserId: model.sharedWithUserId,
         invitedEmail: model.invitedEmail,
-        status: model.status as 'pending' | 'accepted',
+        status: (() => {
+          if (model.status !== 'pending' && model.status !== 'accepted') {
+            throw new Error(`Invalid PetShare status from DB: ${model.status}`);
+          }
+          return model.status;
+        })(),
         canViewVetVisits: model.canViewVetVisits,
         canEditVetVisits: model.canEditVetVisits,
         canViewMedications: model.canViewMedications,
