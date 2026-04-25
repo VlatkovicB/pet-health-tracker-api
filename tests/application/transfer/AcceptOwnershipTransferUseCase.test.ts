@@ -3,10 +3,8 @@ import { AcceptOwnershipTransferUseCase } from '../../../src/application/transfe
 import { PetOwnershipTransferRepository } from '../../../src/domain/transfer/PetOwnershipTransferRepository';
 import { PetRepository } from '../../../src/domain/pet/PetRepository';
 import { PetShareRepository } from '../../../src/domain/share/PetShareRepository';
-import { UserRepository } from '../../../src/domain/user/UserRepository';
 import { PetOwnershipTransfer } from '../../../src/domain/transfer/PetOwnershipTransfer';
 import { Pet } from '../../../src/domain/pet/Pet';
-import { User } from '../../../src/domain/user/User';
 import { UniqueEntityId } from '../../../src/domain/shared/UniqueEntityId';
 import { ForbiddenError, NotFoundError } from '../../../src/shared/errors/AppError';
 
@@ -32,10 +30,7 @@ function makeUseCase(transfer: PetOwnershipTransfer | null, pet: Pet | null) {
   const transferRepo = { findById: jest.fn().mockResolvedValue(transfer), save: jest.fn() } as unknown as PetOwnershipTransferRepository;
   const petRepo = { findById: jest.fn().mockResolvedValue(pet), save: jest.fn() } as unknown as PetRepository;
   const shareRepo = { save: jest.fn() } as unknown as PetShareRepository;
-  const userRepo = { findById: jest.fn().mockResolvedValue(
-    User.reconstitute({ name: 'Old', email: 'old@example.com', passwordHash: 'x', theme: 'light', createdAt: new Date() }, new UniqueEntityId('owner-1'))
-  ) } as unknown as UserRepository;
-  return { useCase: new AcceptOwnershipTransferUseCase(transferRepo, petRepo, shareRepo, userRepo), transferRepo, petRepo, shareRepo };
+  return { useCase: new AcceptOwnershipTransferUseCase(transferRepo, petRepo, shareRepo), transferRepo, petRepo, shareRepo };
 }
 
 describe('AcceptOwnershipTransferUseCase', () => {
@@ -68,5 +63,19 @@ describe('AcceptOwnershipTransferUseCase', () => {
     const pet = makePet();
     const { useCase } = makeUseCase(transfer, pet);
     await expect(useCase.execute('transfer-1', 'user-99', false)).rejects.toThrow(ForbiddenError);
+  });
+
+  it('throws ForbiddenError when toUserId is null (invite not yet linked)', async () => {
+    const transfer = PetOwnershipTransfer.reconstitute(
+      {
+        petId: 'pet-1', fromUserId: 'owner-1', toUserId: null,
+        invitedEmail: 'new@example.com', status: 'pending',
+        expiresAt: new Date(Date.now() + 7 * 86400000), createdAt: new Date(),
+      },
+      new UniqueEntityId('transfer-1'),
+    );
+    const pet = makePet();
+    const { useCase } = makeUseCase(transfer, pet);
+    await expect(useCase.execute('transfer-1', 'user-2', false)).rejects.toThrow(ForbiddenError);
   });
 });
