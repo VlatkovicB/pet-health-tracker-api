@@ -4,6 +4,7 @@ import { sequelize } from './infrastructure/db/database';
 import { registerDependencies } from './container';
 import { createApp } from './app';
 import { NotificationWorker } from './infrastructure/queue/NotificationWorker';
+import { createTransferExpiryWorker } from './infrastructure/queue/TransferExpiryWorker';
 import { EmailService } from './infrastructure/email/EmailService';
 import { SequelizeUserRepository } from './infrastructure/db/repositories/SequelizeUserRepository';
 import { Container } from 'typedi';
@@ -20,6 +21,10 @@ async function main(): Promise<void> {
   const userRepository = Container.get(SequelizeUserRepository);
   new NotificationWorker(emailService, userRepository);
   console.log('Notification worker started');
+
+  // Start BullMQ transfer expiry worker
+  createTransferExpiryWorker();
+  console.log('Transfer expiry worker started');
 
   const app = createApp();
   const port = process.env.PORT ?? 3000;
