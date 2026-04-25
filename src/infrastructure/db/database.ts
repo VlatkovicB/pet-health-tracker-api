@@ -9,6 +9,8 @@ import { ReminderModel } from './models/ReminderModel';
 import { ReminderNotifyUserModel } from './models/ReminderNotifyUserModel';
 import { NoteModel } from './models/NoteModel';
 import { NotePetTagModel } from './models/NotePetTagModel';
+import { PetShareModel } from './models/PetShareModel';
+import { PetOwnershipTransferModel } from './models/PetOwnershipTransferModel';
 
 export const sequelize = new Sequelize({
   dialect: 'postgres',
@@ -29,5 +31,7 @@ export const sequelize = new Sequelize({
     ReminderNotifyUserModel,
     NoteModel,
     NotePetTagModel,
+    PetShareModel,
+    PetOwnershipTransferModel,
   ],
 });
