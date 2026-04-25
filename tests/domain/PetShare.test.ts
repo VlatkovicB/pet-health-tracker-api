@@ -39,18 +39,42 @@ describe('PetShare', () => {
 
   it('canEdit grants canView automatically', () => {
     const share = PetShare.create({ ...base, canEditVetVisits: true });
+    share.accept();
     expect(share.hasPermission('view_vet_visits')).toBe(true);
     expect(share.hasPermission('edit_vet_visits')).toBe(true);
   });
 
   it('canView alone does not grant canEdit', () => {
     const share = PetShare.create({ ...base, canViewVetVisits: true });
+    share.accept();
     expect(share.hasPermission('view_vet_visits')).toBe(true);
     expect(share.hasPermission('edit_vet_visits')).toBe(false);
   });
 
   it('hasPermission returns false when permission not granted', () => {
     const share = PetShare.create(base);
+    share.accept();
     expect(share.hasPermission('view_medications')).toBe(false);
+  });
+
+  it('hasPermission returns false for pending share', () => {
+    const share = PetShare.create({ ...base, canViewVetVisits: true });
+    // status is 'pending' — not accepted yet
+    expect(share.hasPermission('view_pet')).toBe(false);
+    expect(share.hasPermission('view_vet_visits')).toBe(false);
+  });
+
+  it('updatePermissions changes hasPermission results', () => {
+    const share = PetShare.create(base);
+    share.accept();
+    expect(share.hasPermission('view_medications')).toBe(false);
+    share.updatePermissions({ ...base, canViewMedications: true });
+    expect(share.hasPermission('view_medications')).toBe(true);
+  });
+
+  it('linkUser sets sharedWithUserId', () => {
+    const share = PetShare.create({ ...base, sharedWithUserId: null });
+    share.linkUser('new-user-id');
+    expect(share.sharedWithUserId).toBe('new-user-id');
   });
 });

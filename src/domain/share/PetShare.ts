@@ -52,6 +52,7 @@ export class PetShare extends AggregateRoot<PetShareProps> {
   }
 
   hasPermission(permission: PetPermission): boolean {
+    if (this.props.status !== 'accepted') return false;
     if (permission === 'owner') return false;
     if (permission === 'view_pet') return true;
     if (permission === 'view_vet_visits') return this.props.canViewVetVisits || this.props.canEditVetVisits;
