@@ -1,9 +1,9 @@
 import { Inject, Service } from 'typedi';
 import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../domain/health/HealthRecordRepository';
-import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
 import { VetVisit } from '../../domain/health/VetVisit';
-import { ForbiddenError, NotFoundError } from '../../shared/errors/AppError';
+import { NotFoundError } from '../../shared/errors/AppError';
 import { ReminderSchedulerService } from '../../infrastructure/queue/ReminderSchedulerService';
+import { PetAccessService } from '../pet/PetAccessService';
 
 export interface UpdateVetVisitInput {
   visitId: string;
@@ -18,7 +18,7 @@ export interface UpdateVetVisitInput {
 export class UpdateVetVisitUseCase {
   constructor(
     @Inject(HEALTH_RECORD_REPOSITORY) private readonly healthRepo: HealthRecordRepository,
-    @Inject(PET_REPOSITORY) private readonly petRepository: PetRepository,
+    private readonly petAccessService: PetAccessService,
     private readonly reminderScheduler: ReminderSchedulerService,
   ) {}
 
@@ -26,8 +26,7 @@ export class UpdateVetVisitUseCase {
     const existing = await this.healthRepo.findVetVisitById(input.visitId);
     if (!existing) throw new NotFoundError('VetVisit');
 
-    const pet = await this.petRepository.findById(existing.petId);
-    if (!pet || pet.userId !== input.requestingUserId) throw new ForbiddenError('Not your pet');
+    const pet = await this.petAccessService.assertCanAccess(existing.petId, input.requestingUserId, 'edit_vet_visits');
 
     const updated = VetVisit.reconstitute(
       {

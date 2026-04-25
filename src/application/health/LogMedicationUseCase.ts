@@ -1,12 +1,12 @@
 import { Inject, Service } from 'typedi';
 import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../domain/health/HealthRecordRepository';
-import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
 import { ReminderRepository, REMINDER_REPOSITORY } from '../../domain/reminder/ReminderRepository';
+import { PetAccessService } from '../pet/PetAccessService';
 import { Medication } from '../../domain/health/Medication';
 import { Dosage } from '../../domain/health/value-objects/Dosage';
 import { ReminderSchedule, ReminderScheduleProps } from '../../domain/health/value-objects/ReminderSchedule';
 import { Reminder, AdvanceNotice } from '../../domain/reminder/Reminder';
-import { ForbiddenError, NotFoundError, ValidationError } from '../../shared/errors/AppError';
+import { ValidationError } from '../../shared/errors/AppError';
 import { ReminderSchedulerService } from '../../infrastructure/queue/ReminderSchedulerService';
 
 interface LogMedicationInput {
@@ -26,7 +26,7 @@ interface LogMedicationInput {
 export class LogMedicationUseCase {
   constructor(
     @Inject(HEALTH_RECORD_REPOSITORY) private readonly healthRepo: HealthRecordRepository,
-    @Inject(PET_REPOSITORY) private readonly petRepository: PetRepository,
+    private readonly petAccessService: PetAccessService,
     @Inject(REMINDER_REPOSITORY) private readonly reminderRepo: ReminderRepository,
     private readonly reminderScheduler: ReminderSchedulerService,
   ) {}
@@ -38,9 +38,7 @@ export class LogMedicationUseCase {
     if (!input.schedule) throw new ValidationError('Schedule is required');
     if (!input.startDate) throw new ValidationError('Start date is required');
 
-    const pet = await this.petRepository.findById(input.petId);
-    if (!pet) throw new NotFoundError('Pet');
-    if (pet.userId !== input.requestingUserId) throw new ForbiddenError('Not your pet');
+    const pet = await this.petAccessService.assertCanAccess(input.petId, input.requestingUserId, 'edit_medications');
 
     const schedule = ReminderSchedule.create(input.schedule);
 

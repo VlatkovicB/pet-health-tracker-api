@@ -1,8 +1,8 @@
 import { Inject, Service } from 'typedi';
 import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
 import { Pet } from '../../domain/pet/Pet';
-import { ForbiddenError, NotFoundError } from '../../shared/errors/AppError';
 import { UniqueEntityId } from '../../domain/shared/UniqueEntityId';
+import { PetAccessService } from './PetAccessService';
 
 export interface UpdatePetInput {
   petId: string;
@@ -19,12 +19,11 @@ export interface UpdatePetInput {
 export class UpdatePetUseCase {
   constructor(
     @Inject(PET_REPOSITORY) private readonly petRepository: PetRepository,
+    private readonly petAccessService: PetAccessService,
   ) {}
 
   async execute(input: UpdatePetInput): Promise<Pet> {
-    const existing = await this.petRepository.findById(input.petId);
-    if (!existing) throw new NotFoundError('Pet');
-    if (existing.userId !== input.requestingUserId) throw new ForbiddenError('Not your pet');
+    const existing = await this.petAccessService.assertCanAccess(input.petId, input.requestingUserId, 'owner');
 
     const updated = Pet.reconstitute(
       {

@@ -1,9 +1,9 @@
 import { Inject, Service } from 'typedi';
 import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../domain/health/HealthRecordRepository';
-import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
 import { VetVisit } from '../../domain/health/VetVisit';
-import { ForbiddenError, NotFoundError, ValidationError } from '../../shared/errors/AppError';
+import { NotFoundError, ValidationError } from '../../shared/errors/AppError';
 import { ReminderSchedulerService } from '../../infrastructure/queue/ReminderSchedulerService';
+import { PetAccessService } from '../pet/PetAccessService';
 
 interface CompleteVetVisitInput {
   visitId: string;
@@ -15,7 +15,7 @@ interface CompleteVetVisitInput {
 export class CompleteVetVisitUseCase {
   constructor(
     @Inject(HEALTH_RECORD_REPOSITORY) private readonly healthRepo: HealthRecordRepository,
-    @Inject(PET_REPOSITORY) private readonly petRepository: PetRepository,
+    private readonly petAccessService: PetAccessService,
     private readonly reminderScheduler: ReminderSchedulerService,
   ) {}
 
@@ -26,8 +26,7 @@ export class CompleteVetVisitUseCase {
       throw new ValidationError('Only scheduled visits can be marked as done');
     }
 
-    const pet = await this.petRepository.findById(existing.petId);
-    if (!pet || pet.userId !== input.requestingUserId) throw new ForbiddenError('Not your pet');
+    await this.petAccessService.assertCanAccess(existing.petId, input.requestingUserId, 'edit_vet_visits');
 
     const completed = VetVisit.reconstitute(
       {

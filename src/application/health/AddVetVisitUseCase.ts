@@ -1,9 +1,9 @@
 import { Inject, Service } from 'typedi';
 import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../domain/health/HealthRecordRepository';
-import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
 import { VetVisit } from '../../domain/health/VetVisit';
-import { ForbiddenError, NotFoundError, ValidationError } from '../../shared/errors/AppError';
+import { ValidationError } from '../../shared/errors/AppError';
 import { ReminderSchedulerService } from '../../infrastructure/queue/ReminderSchedulerService';
+import { PetAccessService } from '../pet/PetAccessService';
 
 interface ScheduleNextVisitInput {
   visitDate: Date;
@@ -32,7 +32,7 @@ export interface AddVetVisitResult {
 export class AddVetVisitUseCase {
   constructor(
     @Inject(HEALTH_RECORD_REPOSITORY) private readonly healthRepo: HealthRecordRepository,
-    @Inject(PET_REPOSITORY) private readonly petRepository: PetRepository,
+    private readonly petAccessService: PetAccessService,
     private readonly reminderScheduler: ReminderSchedulerService,
   ) {}
 
@@ -40,9 +40,7 @@ export class AddVetVisitUseCase {
     if (!input.reason?.trim()) throw new ValidationError('Reason is required');
     if (!input.visitDate) throw new ValidationError('Visit date is required');
 
-    const pet = await this.petRepository.findById(input.petId);
-    if (!pet) throw new NotFoundError('Pet');
-    if (pet.userId !== input.requestingUserId) throw new ForbiddenError('Not your pet');
+    const pet = await this.petAccessService.assertCanAccess(input.petId, input.requestingUserId, 'edit_vet_visits');
 
     const now = new Date();
     const type = input.visitDate > now ? 'scheduled' : 'logged';

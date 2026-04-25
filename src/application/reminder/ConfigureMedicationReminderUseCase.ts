@@ -1,10 +1,10 @@
 import { Inject, Service } from 'typedi';
 import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../domain/health/HealthRecordRepository';
-import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
 import { ReminderRepository, REMINDER_REPOSITORY } from '../../domain/reminder/ReminderRepository';
 import { Reminder, AdvanceNotice } from '../../domain/reminder/Reminder';
-import { ForbiddenError, NotFoundError } from '../../shared/errors/AppError';
+import { NotFoundError } from '../../shared/errors/AppError';
 import { ReminderSchedulerService } from '../../infrastructure/queue/ReminderSchedulerService';
+import { PetAccessService } from '../pet/PetAccessService';
 
 interface ConfigureReminderInput {
   medicationId: string;
@@ -17,7 +17,7 @@ interface ConfigureReminderInput {
 export class ConfigureMedicationReminderUseCase {
   constructor(
     @Inject(HEALTH_RECORD_REPOSITORY) private readonly healthRepo: HealthRecordRepository,
-    @Inject(PET_REPOSITORY) private readonly petRepository: PetRepository,
+    private readonly petAccessService: PetAccessService,
     @Inject(REMINDER_REPOSITORY) private readonly reminderRepo: ReminderRepository,
     private readonly reminderScheduler: ReminderSchedulerService,
   ) {}
@@ -26,9 +26,7 @@ export class ConfigureMedicationReminderUseCase {
     const medication = await this.healthRepo.findMedicationById(input.medicationId);
     if (!medication) throw new NotFoundError('Medication');
 
-    const pet = await this.petRepository.findById(medication.petId);
-    if (!pet) throw new NotFoundError('Pet');
-    if (pet.userId !== input.requestingUserId) throw new ForbiddenError('Not your pet');
+    const pet = await this.petAccessService.assertCanAccess(medication.petId, input.requestingUserId, 'view_pet');
 
     const existing = await this.reminderRepo.findByEntityId(input.medicationId);
 
