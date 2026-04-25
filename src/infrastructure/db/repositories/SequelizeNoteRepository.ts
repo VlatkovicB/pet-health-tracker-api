@@ -5,6 +5,7 @@ import { NoteRepository } from '../../../domain/note/NoteRepository';
 import { NoteModel } from '../models/NoteModel';
 import { NotePetTagModel } from '../models/NotePetTagModel';
 import { NoteMapper } from '../../mappers/NoteMapper';
+import { sequelize } from '../database';
 
 @Service()
 export class SequelizeNoteRepository implements NoteRepository {
@@ -12,22 +13,19 @@ export class SequelizeNoteRepository implements NoteRepository {
 
   async save(note: Note): Promise<Note> {
     const id = note.id.toValue();
-    await NoteModel.upsert({
-      id,
-      userId: note.userId,
-      title: note.title,
-      description: note.description ?? null,
-      noteDate: note.noteDate,
-      imageUrls: note.imageUrls,
-      createdAt: note.createdAt,
+    await sequelize.transaction(async (t) => {
+      await NoteModel.upsert(this.noteMapper.toPersistence(note) as any, { transaction: t });
+      await NotePetTagModel.destroy({ where: { noteId: id }, transaction: t });
+      if (note.petIds.length > 0) {
+        await NotePetTagModel.bulkCreate(
+          note.petIds.map((petId) => ({ noteId: id, petId })),
+          { transaction: t },
+        );
+      }
     });
-    await NotePetTagModel.destroy({ where: { noteId: id } });
-    if (note.petIds.length > 0) {
-      await NotePetTagModel.bulkCreate(
-        note.petIds.map((petId) => ({ noteId: id, petId })),
-      );
-    }
-    return (await this.findById(id))!;
+    const saved = await this.findById(id);
+    if (!saved) throw new Error(`Note ${id} not found after save`);
+    return saved;
   }
 
   async findById(id: string): Promise<Note | null> {
@@ -61,7 +59,9 @@ export class SequelizeNoteRepository implements NoteRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await NotePetTagModel.destroy({ where: { noteId: id } });
-    await NoteModel.destroy({ where: { id } });
+    await sequelize.transaction(async (t) => {
+      await NotePetTagModel.destroy({ where: { noteId: id }, transaction: t });
+      await NoteModel.destroy({ where: { id }, transaction: t });
+    });
   }
 }

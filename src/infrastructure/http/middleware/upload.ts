@@ -35,3 +35,9 @@ export const uploadPetPhoto = multer({
   fileFilter,
   limits,
 });
+
+export const uploadNoteImage = multer({
+  storage: makeStorage(path.join(process.cwd(), 'uploads', 'notes')),
+  fileFilter,
+  limits,
+});
