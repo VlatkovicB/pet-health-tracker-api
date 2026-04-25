@@ -5,7 +5,7 @@ import { TRANSFER_EXPIRY_QUEUE_NAME, TransferExpiryJobData } from './TransferExp
 import { ExpireOwnershipTransferUseCase } from '../../application/transfer/ExpireOwnershipTransferUseCase';
 
 export function createTransferExpiryWorker(): Worker<TransferExpiryJobData> {
-  return new Worker<TransferExpiryJobData>(
+  const worker = new Worker<TransferExpiryJobData>(
     TRANSFER_EXPIRY_QUEUE_NAME,
     async (job) => {
       const useCase = Container.get(ExpireOwnershipTransferUseCase);
@@ -13,4 +13,10 @@ export function createTransferExpiryWorker(): Worker<TransferExpiryJobData> {
     },
     { connection: redis },
   );
+
+  worker.on('failed', (job, err) => {
+    console.error(`TransferExpiry job ${job?.id} failed:`, err.message);
+  });
+
+  return worker;
 }

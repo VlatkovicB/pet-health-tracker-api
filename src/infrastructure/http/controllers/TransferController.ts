@@ -44,7 +44,7 @@ export class TransferController {
       await this.acceptTransfer.execute(
         req.params.transferId,
         req.auth.userId,
-        Boolean(req.body.retainAccessForOriginalOwner),
+        req.body.retainAccessForOriginalOwner === true,
       );
       res.status(204).send();
     } catch (err) { next(err); }

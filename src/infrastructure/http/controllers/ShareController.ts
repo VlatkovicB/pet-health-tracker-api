@@ -47,11 +47,12 @@ export class ShareController {
 
   update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
+      const { canViewVetVisits, canEditVetVisits, canViewMedications, canEditMedications, canViewNotes, canEditNotes } = req.body;
       const share = await this.updateSharePermissions.execute({
         petId: req.params.petId,
         shareId: req.params.shareId,
         requestingUserId: req.auth.userId,
-        ...req.body,
+        canViewVetVisits, canEditVetVisits, canViewMedications, canEditMedications, canViewNotes, canEditNotes,
       });
       res.json(this.shareMapper.toResponse(share));
     } catch (err) { next(err); }
