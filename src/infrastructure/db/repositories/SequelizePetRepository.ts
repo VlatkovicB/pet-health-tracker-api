@@ -1,4 +1,5 @@
 import { Service } from 'typedi';
+import { Op } from 'sequelize';
 import { PetModel } from '../models/PetModel';
 import { PetRepository } from '../../../domain/pet/PetRepository';
 import { Pet } from '../../../domain/pet/Pet';
@@ -12,6 +13,11 @@ export class SequelizePetRepository implements PetRepository {
   async findById(id: string): Promise<Pet | null> {
     const model = await PetModel.findByPk(id);
     return model ? this.mapper.toDomain(model) : null;
+  }
+
+  async findByIds(ids: string[]): Promise<Pet[]> {
+    const models = await PetModel.findAll({ where: { id: { [Op.in]: ids } } });
+    return models.map((m) => this.mapper.toDomain(m));
   }
 
   async findByUserId(userId: string, { page, limit }: PaginationParams): Promise<PaginatedResult<Pet>> {

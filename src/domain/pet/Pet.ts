@@ -22,6 +22,10 @@ export class Pet extends AggregateRoot<PetProps> {
   get color(): string | undefined { return this.props.color; }
   get createdAt(): Date { return this.props.createdAt; }
 
+  transferOwnership(newOwnerId: string): void {
+    this.props.userId = newOwnerId;
+  }
+
   static create(props: Omit<PetProps, 'createdAt'>, id?: UniqueEntityId): Pet {
     return new Pet({ ...props, createdAt: new Date() }, id);
   }
