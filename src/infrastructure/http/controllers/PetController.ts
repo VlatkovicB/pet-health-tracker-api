@@ -1,12 +1,24 @@
-import { Request, Response, NextFunction } from 'express';
+import { JsonController, Get, Post, Put, Body, Param, QueryParams, UseBefore, CurrentUser, HttpCode, Req } from 'routing-controllers';
+import { Request } from 'express';
 import { Service } from 'typedi';
 import { AddPetUseCase } from '../../../application/pet/AddPetUseCase';
 import { ListPetsUseCase } from '../../../application/pet/ListPetsUseCase';
 import { GetPetUseCase } from '../../../application/pet/GetPetUseCase';
 import { UpdatePetUseCase } from '../../../application/pet/UpdatePetUseCase';
 import { PetMapper } from '../../mappers/PetMapper';
+import { authMiddleware, AuthPayload } from '../middleware/authMiddleware';
+import { uploadPetPhoto } from '../middleware/upload';
+import { AppError } from '../../../shared/errors/AppError';
+import { Validate } from '../decorators/Validate';
+import {
+  CreatePetSchema, CreatePetBody,
+  UpdatePetSchema, UpdatePetBody,
+  PaginationQuerySchema, PaginationQuery,
+} from '../schemas/petSchemas';
 
+@JsonController('/pets')
 @Service()
+@UseBefore(authMiddleware)
 export class PetController {
   constructor(
     private readonly addPet: AddPetUseCase,
@@ -16,68 +28,49 @@ export class PetController {
     private readonly mapper: PetMapper,
   ) {}
 
-  create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const pet = await this.addPet.execute({
-        ...req.body,
-        birthDate: req.body.birthDate ? new Date(req.body.birthDate) : undefined,
-        requestingUserId: req.auth.userId,
-      });
-      res.status(201).json(this.mapper.toResponse(pet));
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Get('/')
+  @Validate({ query: PaginationQuerySchema })
+  async list(@QueryParams() query: PaginationQuery, @CurrentUser() user: AuthPayload) {
+    const result = await this.listPets.execute(user.userId, query);
+    return { ...result, items: result.items.map(p => this.mapper.toResponse(p)) };
+  }
 
-  list = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const page = Math.max(1, parseInt(req.query.page as string) || 1);
-      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
-      const result = await this.listPets.execute(req.auth.userId, { page, limit });
-      res.json({ ...result, items: result.items.map((p) => this.mapper.toResponse(p)) });
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Post('/')
+  @HttpCode(201)
+  @Validate({ body: CreatePetSchema })
+  async create(@Body() body: CreatePetBody, @CurrentUser() user: AuthPayload) {
+    const pet = await this.addPet.execute({
+      ...body,
+      birthDate: body.birthDate ? new Date(body.birthDate) : undefined,
+      requestingUserId: user.userId,
+    });
+    return this.mapper.toResponse(pet);
+  }
 
-  get = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const pet = await this.getPet.execute(req.params.petId, req.auth.userId);
-      res.json(this.mapper.toResponse(pet));
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Get('/:petId')
+  async get(@Param('petId') petId: string, @CurrentUser() user: AuthPayload) {
+    const pet = await this.getPet.execute(petId, user.userId);
+    return this.mapper.toResponse(pet);
+  }
 
-  update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const pet = await this.updatePet.execute({
-        petId: req.params.petId,
-        name: req.body.name,
-        species: req.body.species,
-        breed: req.body.breed,
-        birthDate: req.body.birthDate ? new Date(req.body.birthDate) : undefined,
-        color: req.body.color,
-        requestingUserId: req.auth.userId,
-      });
-      res.json(this.mapper.toResponse(pet));
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Put('/:petId')
+  @Validate({ body: UpdatePetSchema })
+  async update(@Param('petId') petId: string, @Body() body: UpdatePetBody, @CurrentUser() user: AuthPayload) {
+    const pet = await this.updatePet.execute({
+      petId,
+      ...body,
+      birthDate: body.birthDate ? new Date(body.birthDate) : undefined,
+      requestingUserId: user.userId,
+    });
+    return this.mapper.toResponse(pet);
+  }
 
-  uploadPhoto = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      if (!req.file) { res.status(400).json({ message: 'No file uploaded' }); return; }
-      const photoUrl = `/uploads/pets/${req.file.filename}`;
-      const pet = await this.updatePet.execute({
-        petId: req.params.petId,
-        photoUrl,
-        requestingUserId: req.auth.userId,
-      });
-      res.json(this.mapper.toResponse(pet));
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Post('/:petId/photo')
+  @UseBefore(uploadPetPhoto.single('photo'))
+  async uploadPhoto(@Param('petId') petId: string, @Req() req: Request, @CurrentUser() user: AuthPayload) {
+    if (!req.file) throw new AppError('No file uploaded', 400);
+    const photoUrl = `/uploads/pets/${req.file.filename}`;
+    const pet = await this.updatePet.execute({ petId, photoUrl, requestingUserId: user.userId });
+    return this.mapper.toResponse(pet);
+  }
 }
