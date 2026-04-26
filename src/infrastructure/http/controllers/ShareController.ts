@@ -30,7 +30,14 @@ export class ShareController {
     const results = await this.listSharedPets.execute(user.userId);
     return results.map(({ pet, share }) => ({
       ...this.petMapper.toResponse(pet),
-      permissions: this.shareMapper.toOwnerResponse(share).permissions,
+      permissions: {
+        canViewVetVisits: share.canViewVetVisits,
+        canEditVetVisits: share.canEditVetVisits,
+        canViewMedications: share.canViewMedications,
+        canEditMedications: share.canEditMedications,
+        canViewNotes: share.canViewNotes,
+        canEditNotes: share.canEditNotes,
+      },
       shareId: share.id.toValue(),
     }));
   }

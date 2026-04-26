@@ -27,7 +27,7 @@ export interface PetShareResponseDto {
 export interface PetShareOwnerResponseDto {
   id: string;
   petId: string;
-  invitedEmail: string;
+  sharedWithEmail: string;
   status: 'pending' | 'accepted';
   permissions: SharePermissionsDto;
   createdAt: string;
@@ -95,7 +95,7 @@ export class PetShareMapper {
     return {
       id: share.id.toValue(),
       petId: share.petId,
-      invitedEmail: share.invitedEmail,
+      sharedWithEmail: share.invitedEmail,
       status: share.status,
       permissions: {
         canViewVetVisits: share.canViewVetVisits,
