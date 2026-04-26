@@ -1,38 +1,32 @@
-import { Request, Response, NextFunction } from 'express';
-import { Service } from 'typedi';
-import { Inject } from 'typedi';
+import { JsonController, Get, Patch, Body, UseBefore, CurrentUser } from 'routing-controllers';
+import { Service, Inject } from 'typedi';
 import { UserRepository, USER_REPOSITORY } from '../../../domain/user/UserRepository';
 import { UserMapper } from '../../mappers/UserMapper';
-import { NotFoundError, ValidationError } from '../../../shared/errors/AppError';
-import { ThemeMode } from '../../../domain/user/User';
+import { NotFoundError } from '../../../shared/errors/AppError';
+import { authMiddleware, AuthPayload } from '../middleware/authMiddleware';
+import { Validate } from '../decorators/Validate';
+import { UpdateThemeSchema, UpdateThemeBody } from '../schemas/userSchemas';
 
+@JsonController('/users')
 @Service()
+@UseBefore(authMiddleware)
 export class UserController {
   constructor(
     @Inject(USER_REPOSITORY) private readonly userRepo: UserRepository,
     private readonly userMapper: UserMapper,
   ) {}
 
-  getMe = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const user = await this.userRepo.findById(req.auth.userId);
-      if (!user) return next(new NotFoundError('User'));
-      res.json(this.userMapper.toResponse(user));
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Get('/me')
+  async getMe(@CurrentUser() user: AuthPayload) {
+    const found = await this.userRepo.findById(user.userId);
+    if (!found) throw new NotFoundError('User');
+    return this.userMapper.toResponse(found);
+  }
 
-  updateTheme = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const { theme } = req.body as { theme: ThemeMode };
-      if (theme !== 'light' && theme !== 'dark') {
-        return next(new ValidationError('theme must be "light" or "dark"'));
-      }
-      await this.userRepo.updateTheme(req.auth.userId, theme);
-      res.json({ theme });
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Patch('/me')
+  @Validate({ body: UpdateThemeSchema })
+  async updateTheme(@Body() body: UpdateThemeBody, @CurrentUser() user: AuthPayload) {
+    await this.userRepo.updateTheme(user.userId, body.theme);
+    return { theme: body.theme };
+  }
 }
