@@ -57,4 +57,7 @@ export class PetShareModel extends Model {
 
   @BelongsTo(() => PetModel)
   declare pet: PetModel;
+
+  @BelongsTo(() => UserModel, { foreignKey: 'owner_id', as: 'owner' })
+  declare owner: UserModel;
 }

@@ -1,9 +1,11 @@
-// src/infrastructure/db/repositories/SequelizePetShareRepository.ts
 import { Service } from 'typedi';
 import { Op } from 'sequelize';
 import { PetShareModel } from '../models/PetShareModel';
+import { PetModel } from '../models/PetModel';
+import { UserModel } from '../models/UserModel';
 import { PetShareRepository } from '../../../domain/share/PetShareRepository';
 import { PetShare } from '../../../domain/share/PetShare';
+import { PetShareDetails } from '../../../domain/share/PetShareDetails';
 import { PetShareMapper } from '../../mappers/PetShareMapper';
 
 @Service()
@@ -25,6 +27,33 @@ export class SequelizePetShareRepository implements PetShareRepository {
       where: { sharedWithUserId: userId, status: 'pending' },
     });
     return models.map((m) => this.mapper.toDomain(m));
+  }
+
+  async findPendingForUserWithDetails(userId: string): Promise<PetShareDetails[]> {
+    const models = await PetShareModel.findAll({
+      where: { sharedWithUserId: userId, status: 'pending' },
+      include: [
+        { model: PetModel, attributes: ['name', 'species'] },
+        { model: UserModel, as: 'owner', attributes: ['email'] },
+      ],
+    });
+    return models.map((m) => ({
+      id: m.id,
+      petId: m.petId,
+      petName: (m as any).pet?.name ?? '',
+      petSpecies: (m as any).pet?.species ?? '',
+      sharedByEmail: (m as any).owner?.email ?? '',
+      status: m.status as 'pending' | 'accepted',
+      permissions: {
+        canViewVetVisits: m.canViewVetVisits,
+        canEditVetVisits: m.canEditVetVisits,
+        canViewMedications: m.canViewMedications,
+        canEditMedications: m.canEditMedications,
+        canViewNotes: m.canViewNotes,
+        canEditNotes: m.canEditNotes,
+      },
+      createdAt: m.createdAt,
+    }));
   }
 
   async findByPetIdAndEmail(petId: string, email: string): Promise<PetShare | null> {
