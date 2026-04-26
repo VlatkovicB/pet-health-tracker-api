@@ -1,11 +1,17 @@
-import { Request, Response, NextFunction } from 'express';
+import { JsonController, Get, Post, Put, Body, Param, QueryParams, UseBefore, CurrentUser, HttpCode } from 'routing-controllers';
 import { Service } from 'typedi';
 import { CreateVetUseCase } from '../../../application/vet/CreateVetUseCase';
 import { ListVetsUseCase } from '../../../application/vet/ListVetsUseCase';
 import { UpdateVetUseCase } from '../../../application/vet/UpdateVetUseCase';
 import { VetMapper } from '../../mappers/VetMapper';
+import { authMiddleware, AuthPayload } from '../middleware/authMiddleware';
+import { Validate } from '../decorators/Validate';
+import { CreateVetSchema, CreateVetBody, UpdateVetSchema, UpdateVetBody } from '../schemas/vetSchemas';
+import { PaginationQuerySchema, PaginationQuery } from '../schemas/petSchemas';
 
+@JsonController('/vets')
 @Service()
+@UseBefore(authMiddleware)
 export class VetController {
   constructor(
     private readonly createVet: CreateVetUseCase,
@@ -14,39 +20,25 @@ export class VetController {
     private readonly mapper: VetMapper,
   ) {}
 
-  list = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const page = Math.max(1, parseInt(req.query.page as string) || 1);
-      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
-      const result = await this.listVets.execute(req.auth.userId, { page, limit });
-      res.json({ ...result, items: result.items.map((v) => this.mapper.toResponse(v)) });
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Get('/')
+  @Validate({ query: PaginationQuerySchema })
+  async list(@QueryParams() query: PaginationQuery, @CurrentUser() user: AuthPayload) {
+    const result = await this.listVets.execute(user.userId, query);
+    return { ...result, items: result.items.map(v => this.mapper.toResponse(v)) };
+  }
 
-  create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const vet = await this.createVet.execute({
-        ...req.body,
-        requestingUserId: req.auth.userId,
-      });
-      res.status(201).json(this.mapper.toResponse(vet));
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Post('/')
+  @HttpCode(201)
+  @Validate({ body: CreateVetSchema })
+  async create(@Body() body: CreateVetBody, @CurrentUser() user: AuthPayload) {
+    const vet = await this.createVet.execute({ ...body, requestingUserId: user.userId });
+    return this.mapper.toResponse(vet);
+  }
 
-  update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const vet = await this.updateVet.execute({
-        vetId: req.params.id,
-        ...req.body,
-        requestingUserId: req.auth.userId,
-      });
-      res.json(this.mapper.toResponse(vet));
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Put('/:id')
+  @Validate({ body: UpdateVetSchema })
+  async update(@Param('id') id: string, @Body() body: UpdateVetBody, @CurrentUser() user: AuthPayload) {
+    const vet = await this.updateVet.execute({ vetId: id, ...body, requestingUserId: user.userId });
+    return this.mapper.toResponse(vet);
+  }
 }
