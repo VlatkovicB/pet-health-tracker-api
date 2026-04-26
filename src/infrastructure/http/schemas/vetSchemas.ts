@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const WorkHoursEntrySchema = z.object({
-  dayOfWeek: z.number().int().min(0).max(6),
+  dayOfWeek: z.enum(['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']),
   open: z.boolean(),
   startTime: z.string().optional(),
   endTime: z.string().optional(),

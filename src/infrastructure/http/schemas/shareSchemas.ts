@@ -1,17 +1,24 @@
 import { z } from 'zod';
 
 const PermissionsSchema = z.object({
-  canViewVetVisits: z.boolean().optional(),
-  canEditVetVisits: z.boolean().optional(),
-  canViewMedications: z.boolean().optional(),
-  canEditMedications: z.boolean().optional(),
-  canViewNotes: z.boolean().optional(),
-  canEditNotes: z.boolean().optional(),
+  canViewVetVisits: z.boolean().default(true),
+  canEditVetVisits: z.boolean().default(false),
+  canViewMedications: z.boolean().default(true),
+  canEditMedications: z.boolean().default(false),
+  canViewNotes: z.boolean().default(true),
+  canEditNotes: z.boolean().default(false),
 });
 
 export const CreateShareSchema = z.object({
   email: z.string().email(),
-  permissions: PermissionsSchema.optional(),
+  permissions: PermissionsSchema.default({
+    canViewVetVisits: true,
+    canEditVetVisits: false,
+    canViewMedications: true,
+    canEditMedications: false,
+    canViewNotes: true,
+    canEditNotes: false,
+  }),
 });
 export type CreateShareBody = z.infer<typeof CreateShareSchema>;
 

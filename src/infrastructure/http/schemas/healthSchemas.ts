@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ReminderScheduleSchema } from './reminderSchemas';
+import { ReminderScheduleSchema, AdvanceNoticeSchema } from './reminderSchemas';
 
 const toDate = (s: string) => new Date(s);
 
@@ -47,14 +47,14 @@ export type VetVisitsByDateRangeQuery = z.infer<typeof VetVisitsByDateRangeQuery
 const MedicationReminderSchema = z.object({
   enabled: z.boolean(),
   schedule: ReminderScheduleSchema.optional(),
-  advanceNotice: z.number().optional(),
+  advanceNotice: AdvanceNoticeSchema.optional(),
 }).optional();
 
 export const CreateMedicationSchema = z.object({
   name: z.string().min(1),
   dosageAmount: z.number().positive(),
   dosageUnit: z.string().min(1),
-  schedule: z.string().optional(),
+  schedule: ReminderScheduleSchema,
   startDate: z.string().transform(toDate),
   endDate: z.string().transform(toDate).optional(),
   notes: z.string().optional(),
@@ -66,7 +66,7 @@ export const UpdateMedicationSchema = z.object({
   name: z.string().optional(),
   dosageAmount: z.number().positive().optional(),
   dosageUnit: z.string().optional(),
-  schedule: z.string().optional(),
+  schedule: ReminderScheduleSchema.optional(),
   startDate: z.string().transform(toDate).optional(),
   endDate: z.string().transform(toDate).nullable().optional(),
   notes: z.string().nullable().optional(),
