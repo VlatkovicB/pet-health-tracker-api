@@ -1,11 +1,17 @@
-import { Request, Response, NextFunction } from 'express';
+import { JsonController, Get, Put, Patch, Body, Param, UseBefore, CurrentUser, OnUndefined } from 'routing-controllers';
 import { Inject, Service } from 'typedi';
 import { ConfigureMedicationReminderUseCase } from '../../../application/reminder/ConfigureMedicationReminderUseCase';
 import { ToggleMedicationReminderUseCase } from '../../../application/reminder/ToggleMedicationReminderUseCase';
 import { ReminderRepository, REMINDER_REPOSITORY } from '../../../domain/reminder/ReminderRepository';
 import { ReminderMapper } from '../../mappers/ReminderMapper';
+import { NotFoundError } from '../../../shared/errors/AppError';
+import { authMiddleware, AuthPayload } from '../middleware/authMiddleware';
+import { Validate } from '../decorators/Validate';
+import { ConfigureReminderSchema, ConfigureReminderBody, ToggleReminderSchema, ToggleReminderBody } from '../schemas/reminderSchemas';
 
+@JsonController('/medications')
 @Service()
+@UseBefore(authMiddleware)
 export class ReminderController {
   constructor(
     private readonly configureReminder: ConfigureMedicationReminderUseCase,
@@ -14,39 +20,24 @@ export class ReminderController {
     private readonly reminderMapper: ReminderMapper,
   ) {}
 
-  getReminder = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const reminder = await this.reminderRepo.findByEntityId(req.params.medicationId);
-      if (!reminder) { res.status(404).json({ message: 'No reminder configured' }); return; }
-      res.json(this.reminderMapper.toResponse(reminder));
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Get('/:medicationId/reminder')
+  async getReminder(@Param('medicationId') medicationId: string) {
+    const reminder = await this.reminderRepo.findByEntityId(medicationId);
+    if (!reminder) throw new NotFoundError('Reminder');
+    return this.reminderMapper.toResponse(reminder);
+  }
 
-  configure = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await this.configureReminder.execute({
-        medicationId: req.params.medicationId,
-        ...req.body,
-        requestingUserId: req.auth.userId,
-      });
-      res.status(204).send();
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Put('/:medicationId/reminder')
+  @OnUndefined(204)
+  @Validate({ body: ConfigureReminderSchema })
+  async configure(@Param('medicationId') medicationId: string, @Body() body: ConfigureReminderBody, @CurrentUser() user: AuthPayload) {
+    await this.configureReminder.execute({ medicationId, ...body, requestingUserId: user.userId });
+  }
 
-  toggle = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await this.toggleReminder.execute(
-        req.params.medicationId,
-        req.body.enabled,
-        req.auth.userId,
-      );
-      res.status(204).send();
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Patch('/:medicationId/reminder/toggle')
+  @OnUndefined(204)
+  @Validate({ body: ToggleReminderSchema })
+  async toggle(@Param('medicationId') medicationId: string, @Body() body: ToggleReminderBody, @CurrentUser() user: AuthPayload) {
+    await this.toggleReminder.execute(medicationId, body.enabled, user.userId);
+  }
 }
