@@ -1,8 +1,11 @@
-import { Request, Response, NextFunction } from 'express';
+import { JsonController, Post, Body, HttpCode } from 'routing-controllers';
 import { Service } from 'typedi';
 import { RegisterUserUseCase } from '../../../application/auth/RegisterUserUseCase';
 import { LoginUserUseCase } from '../../../application/auth/LoginUserUseCase';
+import { Validate } from '../decorators/Validate';
+import { RegisterSchema, RegisterBody, LoginSchema, LoginBody } from '../schemas/authSchemas';
 
+@JsonController('/auth')
 @Service()
 export class AuthController {
   constructor(
@@ -10,21 +13,16 @@ export class AuthController {
     private readonly loginUser: LoginUserUseCase,
   ) {}
 
-  register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const result = await this.registerUser.execute(req.body);
-      res.status(201).json(result);
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Post('/register')
+  @HttpCode(201)
+  @Validate({ body: RegisterSchema })
+  async register(@Body() body: RegisterBody) {
+    return this.registerUser.execute(body);
+  }
 
-  login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const result = await this.loginUser.execute(req.body);
-      res.json(result);
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Post('/login')
+  @Validate({ body: LoginSchema })
+  async login(@Body() body: LoginBody) {
+    return this.loginUser.execute(body);
+  }
 }
