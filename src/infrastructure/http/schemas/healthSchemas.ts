@@ -39,12 +39,12 @@ export const CompleteVetVisitSchema = z.object({
 export type CompleteVetVisitBody = z.infer<typeof CompleteVetVisitSchema>;
 
 export const VetVisitsByDateRangeQuerySchema = z.object({
-  from: z.string().min(1, '`from` query param is required (YYYY-MM-DD)'),
-  to: z.string().min(1, '`to` query param is required (YYYY-MM-DD)'),
+  from: z.string().min(1, '`from` query param is required (YYYY-MM-DD)').transform(toDate),
+  to: z.string().min(1, '`to` query param is required (YYYY-MM-DD)').transform(toDate),
 });
 export type VetVisitsByDateRangeQuery = z.infer<typeof VetVisitsByDateRangeQuerySchema>;
 
-const MedicationReminderSchema = z.object({
+export const MedicationReminderSchema = z.object({
   enabled: z.boolean(),
   schedule: ReminderScheduleSchema.optional(),
   advanceNotice: AdvanceNoticeSchema.optional(),

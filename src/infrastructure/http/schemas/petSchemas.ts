@@ -4,7 +4,7 @@ export const CreatePetSchema = z.object({
   name: z.string().min(1),
   species: z.string().min(1),
   breed: z.string().optional(),
-  birthDate: z.string().optional(),
+  birthDate: z.string().transform(s => new Date(s)).optional(),
   color: z.string().optional(),
 });
 export type CreatePetBody = z.infer<typeof CreatePetSchema>;

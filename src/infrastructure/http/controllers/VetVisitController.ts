@@ -26,10 +26,9 @@ export class VetVisitController {
   @Get('/')
   @Validate({ query: VetVisitsByDateRangeQuerySchema })
   async getByDateRange(@QueryParams() query: VetVisitsByDateRangeQuery, @CurrentUser() user: AuthPayload) {
-    const fromDate = new Date(query.from);
-    const toDate = new Date(query.to);
-    toDate.setHours(23, 59, 59, 999);
-    const visits = await this.listVetVisitsByDateRange.execute(user.userId, fromDate, toDate);
+    const endDate = new Date(query.to);
+    endDate.setHours(23, 59, 59, 999);
+    const visits = await this.listVetVisitsByDateRange.execute(user.userId, query.from, endDate);
     return visits.map(v => this.vetVisitMapper.toResponse(v));
   }
 }

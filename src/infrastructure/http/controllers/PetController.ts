@@ -41,7 +41,6 @@ export class PetController {
   async create(@Body() body: CreatePetBody, @CurrentUser() user: AuthPayload) {
     const pet = await this.addPet.execute({
       ...body,
-      birthDate: body.birthDate ? new Date(body.birthDate) : undefined,
       requestingUserId: user.userId,
     });
     return this.mapper.toResponse(pet);
@@ -59,7 +58,6 @@ export class PetController {
     const pet = await this.updatePet.execute({
       petId,
       ...body,
-      birthDate: body.birthDate ? new Date(body.birthDate) : undefined,
       requestingUserId: user.userId,
     });
     return this.mapper.toResponse(pet);
