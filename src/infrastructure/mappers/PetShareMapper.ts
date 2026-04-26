@@ -19,7 +19,7 @@ export interface PetShareResponseDto {
   petName: string;
   petSpecies: string;
   sharedByEmail: string;
-  status: string;
+  status: 'pending' | 'accepted';
   permissions: SharePermissionsDto;
   createdAt: string;
 }
