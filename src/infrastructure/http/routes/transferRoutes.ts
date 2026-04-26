@@ -7,8 +7,8 @@ export function transferRoutes(): Router {
   const router = Router();
   const controller = Container.get(TransferController);
 
-  router.post('/:petId/transfer', authMiddleware, controller.initiate);
-  router.delete('/:petId/transfer', authMiddleware, controller.cancel);
+  router.post('/:petId/transfer', authMiddleware, controller.initiate.bind(controller));
+  router.delete('/:petId/transfer', authMiddleware, controller.cancel.bind(controller));
 
   return router;
 }

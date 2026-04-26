@@ -1,59 +1,33 @@
-import { Request, Response, NextFunction } from 'express';
+import { JsonController, Post, Delete, Body, Param, UseBefore, CurrentUser, HttpCode, OnUndefined } from 'routing-controllers';
 import { Service } from 'typedi';
 import { InitiateOwnershipTransferUseCase } from '../../../application/transfer/InitiateOwnershipTransferUseCase';
 import { CancelOwnershipTransferUseCase } from '../../../application/transfer/CancelOwnershipTransferUseCase';
-import { ListPendingTransfersUseCase } from '../../../application/transfer/ListPendingTransfersUseCase';
-import { AcceptOwnershipTransferUseCase } from '../../../application/transfer/AcceptOwnershipTransferUseCase';
-import { DeclineOwnershipTransferUseCase } from '../../../application/transfer/DeclineOwnershipTransferUseCase';
 import { PetOwnershipTransferMapper } from '../../mappers/PetOwnershipTransferMapper';
+import { authMiddleware, AuthPayload } from '../middleware/authMiddleware';
+import { Validate } from '../decorators/Validate';
+import { InitiateTransferSchema, InitiateTransferBody } from '../schemas/transferSchemas';
 
+@JsonController('/pets')
 @Service()
+@UseBefore(authMiddleware)
 export class TransferController {
   constructor(
     private readonly initiateTransfer: InitiateOwnershipTransferUseCase,
     private readonly cancelTransfer: CancelOwnershipTransferUseCase,
-    private readonly listPendingTransfers: ListPendingTransfersUseCase,
-    private readonly acceptTransfer: AcceptOwnershipTransferUseCase,
-    private readonly declineTransfer: DeclineOwnershipTransferUseCase,
     private readonly mapper: PetOwnershipTransferMapper,
   ) {}
 
-  initiate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const transfer = await this.initiateTransfer.execute(req.params.petId, req.auth.userId, req.body.email);
-      res.status(201).json(this.mapper.toResponse(transfer));
-    } catch (err) { next(err); }
-  };
+  @Post('/:petId/transfer')
+  @HttpCode(201)
+  @Validate({ body: InitiateTransferSchema })
+  async initiate(@Param('petId') petId: string, @Body() body: InitiateTransferBody, @CurrentUser() user: AuthPayload) {
+    const transfer = await this.initiateTransfer.execute(petId, user.userId, body.email);
+    return this.mapper.toResponse(transfer);
+  }
 
-  cancel = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await this.cancelTransfer.execute(req.params.petId, req.auth.userId);
-      res.status(204).send();
-    } catch (err) { next(err); }
-  };
-
-  listPending = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const transfers = await this.listPendingTransfers.execute(req.auth.userId);
-      res.json(transfers.map((t) => this.mapper.toResponse(t)));
-    } catch (err) { next(err); }
-  };
-
-  accept = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await this.acceptTransfer.execute(
-        req.params.transferId,
-        req.auth.userId,
-        req.body.retainAccessForOriginalOwner === true,
-      );
-      res.status(204).send();
-    } catch (err) { next(err); }
-  };
-
-  decline = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await this.declineTransfer.execute(req.params.transferId, req.auth.userId);
-      res.status(204).send();
-    } catch (err) { next(err); }
-  };
+  @Delete('/:petId/transfer')
+  @OnUndefined(204)
+  async cancel(@Param('petId') petId: string, @CurrentUser() user: AuthPayload) {
+    await this.cancelTransfer.execute(petId, user.userId);
+  }
 }
