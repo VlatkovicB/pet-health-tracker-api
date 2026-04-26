@@ -55,7 +55,7 @@ export class PetShareModel extends Model {
   @Column({ type: DataType.DATE, allowNull: false, field: 'created_at' })
   declare createdAt: Date;
 
-  @BelongsTo(() => PetModel)
+  @BelongsTo(() => PetModel, { foreignKey: 'pet_id' })
   declare pet: PetModel;
 
   @BelongsTo(() => UserModel, { foreignKey: 'owner_id', as: 'owner' })

@@ -33,27 +33,31 @@ export class SequelizePetShareRepository implements PetShareRepository {
     const models = await PetShareModel.findAll({
       where: { sharedWithUserId: userId, status: 'pending' },
       include: [
-        { model: PetModel, attributes: ['name', 'species'] },
+        { model: PetModel, as: 'pet', attributes: ['name', 'species'] },
         { model: UserModel, as: 'owner', attributes: ['email'] },
       ],
     });
-    return models.map((m) => ({
-      id: m.id,
-      petId: m.petId,
-      petName: (m as any).pet?.name ?? '',
-      petSpecies: (m as any).pet?.species ?? '',
-      sharedByEmail: (m as any).owner?.email ?? '',
-      status: m.status as 'pending' | 'accepted',
-      permissions: {
-        canViewVetVisits: m.canViewVetVisits,
-        canEditVetVisits: m.canEditVetVisits,
-        canViewMedications: m.canViewMedications,
-        canEditMedications: m.canEditMedications,
-        canViewNotes: m.canViewNotes,
-        canEditNotes: m.canEditNotes,
-      },
-      createdAt: m.createdAt,
-    }));
+    return models.map((m) => {
+      const pet = m.pet as PetModel | null;
+      const owner = m.owner as UserModel | null;
+      return {
+        id: m.id,
+        petId: m.petId,
+        petName: pet?.name ?? '',
+        petSpecies: pet?.species ?? '',
+        sharedByEmail: owner?.email ?? '',
+        status: m.status as 'pending' | 'accepted',
+        permissions: {
+          canViewVetVisits: m.canViewVetVisits,
+          canEditVetVisits: m.canEditVetVisits,
+          canViewMedications: m.canViewMedications,
+          canEditMedications: m.canEditMedications,
+          canViewNotes: m.canViewNotes,
+          canEditNotes: m.canEditNotes,
+        },
+        createdAt: m.createdAt,
+      };
+    });
   }
 
   async findByPetIdAndEmail(petId: string, email: string): Promise<PetShare | null> {
