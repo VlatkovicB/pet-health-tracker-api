@@ -1,22 +1,36 @@
-import { Request, Response, NextFunction } from 'express';
+import { JsonController, Get, Post, Put, Patch, Body, Param, QueryParams, UseBefore, CurrentUser, HttpCode, OnUndefined, Req } from 'routing-controllers';
+import { Request } from 'express';
 import { Inject, Service } from 'typedi';
 import { AddVetVisitUseCase } from '../../../application/health/AddVetVisitUseCase';
 import { AddVetVisitImageUseCase } from '../../../application/health/AddVetVisitImageUseCase';
 import { UpdateVetVisitUseCase } from '../../../application/health/UpdateVetVisitUseCase';
 import { CompleteVetVisitUseCase } from '../../../application/health/CompleteVetVisitUseCase';
 import { ListVetVisitsUseCase } from '../../../application/health/ListVetVisitsUseCase';
-import { ListVetVisitsByDateRangeUseCase } from '../../../application/health/ListVetVisitsByDateRangeUseCase';
 import { LogMedicationUseCase } from '../../../application/health/LogMedicationUseCase';
 import { UpdateMedicationUseCase } from '../../../application/health/UpdateMedicationUseCase';
 import { ListMedicationsUseCase } from '../../../application/health/ListMedicationsUseCase';
 import { ConfigureVetVisitReminderUseCase } from '../../../application/reminder/ConfigureVetVisitReminderUseCase';
+import { ReminderRepository, REMINDER_REPOSITORY } from '../../../domain/reminder/ReminderRepository';
 import { VetVisitMapper } from '../../mappers/VetVisitMapper';
 import { MedicationMapper } from '../../mappers/MedicationMapper';
 import { ReminderMapper } from '../../mappers/ReminderMapper';
-import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../../domain/health/HealthRecordRepository';
-import { ReminderRepository, REMINDER_REPOSITORY } from '../../../domain/reminder/ReminderRepository';
+import { NotFoundError, AppError } from '../../../shared/errors/AppError';
+import { authMiddleware, AuthPayload } from '../middleware/authMiddleware';
+import { uploadImage } from '../middleware/upload';
+import { Validate } from '../decorators/Validate';
+import {
+  CreateVetVisitSchema, CreateVetVisitBody,
+  UpdateVetVisitSchema, UpdateVetVisitBody,
+  CompleteVetVisitSchema, CompleteVetVisitBody,
+  CreateMedicationSchema, CreateMedicationBody,
+  UpdateMedicationSchema, UpdateMedicationBody,
+} from '../schemas/healthSchemas';
+import { ConfigureVetVisitReminderSchema, ConfigureVetVisitReminderBody } from '../schemas/reminderSchemas';
+import { PaginationQuerySchema, PaginationQuery } from '../schemas/petSchemas';
 
+@JsonController('/pets')
 @Service()
+@UseBefore(authMiddleware)
 export class HealthController {
   constructor(
     private readonly addVetVisit: AddVetVisitUseCase,
@@ -24,7 +38,6 @@ export class HealthController {
     private readonly updateVetVisit: UpdateVetVisitUseCase,
     private readonly completeVetVisitUseCase: CompleteVetVisitUseCase,
     private readonly listVetVisits: ListVetVisitsUseCase,
-    private readonly listVetVisitsByDateRange: ListVetVisitsByDateRangeUseCase,
     private readonly logMedication: LogMedicationUseCase,
     private readonly updateMedication: UpdateMedicationUseCase,
     private readonly listMedications: ListMedicationsUseCase,
@@ -32,195 +45,82 @@ export class HealthController {
     private readonly vetVisitMapper: VetVisitMapper,
     private readonly medicationMapper: MedicationMapper,
     private readonly reminderMapper: ReminderMapper,
-    @Inject(HEALTH_RECORD_REPOSITORY) private readonly healthRepo: HealthRecordRepository,
     @Inject(REMINDER_REPOSITORY) private readonly reminderRepo: ReminderRepository,
   ) {}
 
-  getVetVisits = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const page = Math.max(1, parseInt(req.query.page as string) || 1);
-      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
-      const result = await this.listVetVisits.execute(req.params.petId, req.auth.userId, { page, limit });
-      res.json({ ...result, items: result.items.map((v) => this.vetVisitMapper.toResponse(v)) });
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Get('/:petId/vet-visits')
+  @Validate({ query: PaginationQuerySchema })
+  async getVetVisits(@Param('petId') petId: string, @QueryParams() query: PaginationQuery, @CurrentUser() user: AuthPayload) {
+    const result = await this.listVetVisits.execute(petId, user.userId, query);
+    return { ...result, items: result.items.map(v => this.vetVisitMapper.toResponse(v)) };
+  }
 
-  createVetVisit = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const scheduleNextVisit = req.body.scheduleNextVisit
-        ? { ...req.body.scheduleNextVisit, visitDate: new Date(req.body.scheduleNextVisit.visitDate) }
-        : undefined;
+  @Post('/:petId/vet-visits')
+  @HttpCode(201)
+  @Validate({ body: CreateVetVisitSchema })
+  async createVetVisit(@Param('petId') petId: string, @Body() body: CreateVetVisitBody, @CurrentUser() user: AuthPayload) {
+    const result = await this.addVetVisit.execute({ ...body, petId, requestingUserId: user.userId });
+    return {
+      visit: this.vetVisitMapper.toResponse(result.visit),
+      nextVisit: result.nextVisit ? this.vetVisitMapper.toResponse(result.nextVisit) : undefined,
+    };
+  }
 
-      const result = await this.addVetVisit.execute({
-        ...req.body,
-        petId: req.params.petId,
-        visitDate: new Date(req.body.visitDate),
-        scheduleNextVisit,
-        requestingUserId: req.auth.userId,
-      });
+  @Put('/:petId/vet-visits/:visitId')
+  @Validate({ body: UpdateVetVisitSchema })
+  async updateVetVisit(@Param('visitId') visitId: string, @Body() body: UpdateVetVisitBody, @CurrentUser() user: AuthPayload) {
+    const visit = await this.updateVetVisit.execute({ visitId, ...body, requestingUserId: user.userId });
+    return this.vetVisitMapper.toResponse(visit);
+  }
 
-      res.status(201).json({
-        visit: this.vetVisitMapper.toResponse(result.visit),
-        nextVisit: result.nextVisit ? this.vetVisitMapper.toResponse(result.nextVisit) : undefined,
-      });
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Patch('/:petId/vet-visits/:visitId/complete')
+  @Validate({ body: CompleteVetVisitSchema })
+  async completeVetVisit(@Param('visitId') visitId: string, @Body() body: CompleteVetVisitBody, @CurrentUser() user: AuthPayload) {
+    const visit = await this.completeVetVisitUseCase.execute({ visitId, ...body, requestingUserId: user.userId });
+    return this.vetVisitMapper.toResponse(visit);
+  }
 
-  uploadVetVisitImage = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      if (!req.file) { res.status(400).json({ message: 'No file uploaded' }); return; }
-      const imageUrl = `/uploads/vet-visits/${req.file.filename}`;
-      const visit = await this.addVetVisitImage.execute(req.params.visitId, imageUrl, req.auth.userId);
-      res.json(this.vetVisitMapper.toResponse(visit));
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Get('/:petId/vet-visits/:visitId/reminder')
+  async getVetVisitReminder(@Param('visitId') visitId: string) {
+    const reminder = await this.reminderRepo.findByEntityId(visitId);
+    if (!reminder) throw new NotFoundError('Reminder');
+    return this.reminderMapper.toResponse(reminder);
+  }
 
-  updateVetVisitHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const visit = await this.updateVetVisit.execute({
-        visitId: req.params.visitId,
-        vetId: req.body.vetId,
-        reason: req.body.reason,
-        notes: req.body.notes,
-        visitDate: req.body.visitDate ? new Date(req.body.visitDate) : undefined,
-        requestingUserId: req.auth.userId,
-      });
-      res.json(this.vetVisitMapper.toResponse(visit));
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Put('/:petId/vet-visits/:visitId/reminder')
+  @OnUndefined(204)
+  @Validate({ body: ConfigureVetVisitReminderSchema })
+  async configureVetVisitReminder(@Param('visitId') visitId: string, @Body() body: ConfigureVetVisitReminderBody, @CurrentUser() user: AuthPayload) {
+    await this.configureVetVisitReminder.execute({ visitId, ...body, requestingUserId: user.userId });
+  }
 
-  completeVetVisit = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const visit = await this.completeVetVisitUseCase.execute({
-        visitId: req.params.visitId,
-        notes: req.body.notes,
-        requestingUserId: req.auth.userId,
-      });
-      res.json(this.vetVisitMapper.toResponse(visit));
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Post('/:petId/vet-visits/:visitId/images')
+  @UseBefore(uploadImage.single('image'))
+  async uploadVetVisitImage(@Param('visitId') visitId: string, @Req() req: Request, @CurrentUser() user: AuthPayload) {
+    if (!req.file) throw new AppError('No file uploaded', 400);
+    const imageUrl = `/uploads/vet-visits/${req.file.filename}`;
+    const visit = await this.addVetVisitImage.execute(visitId, imageUrl, user.userId);
+    return this.vetVisitMapper.toResponse(visit);
+  }
 
-  getVetVisitReminder = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const reminder = await this.reminderRepo.findByEntityId(req.params.visitId);
-      if (!reminder) { res.status(404).json({ message: 'No reminder configured' }); return; }
-      res.json(this.reminderMapper.toResponse(reminder));
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Get('/:petId/medications')
+  async getMedications(@Param('petId') petId: string, @CurrentUser() user: AuthPayload) {
+    const summaries = await this.listMedications.execute(petId, user.userId);
+    return summaries.map(s => this.medicationMapper.toResponse(s.medication, s.reminderEnabled, s.advanceNotice));
+  }
 
-  configureVetVisitReminderHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await this.configureVetVisitReminder.execute({
-        visitId: req.params.visitId,
-        schedule: req.body.schedule,
-        enabled: req.body.enabled,
-        requestingUserId: req.auth.userId,
-      });
-      res.status(204).send();
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Post('/:petId/medications')
+  @HttpCode(201)
+  @Validate({ body: CreateMedicationSchema })
+  async createMedication(@Param('petId') petId: string, @Body() body: CreateMedicationBody, @CurrentUser() user: AuthPayload) {
+    const medication = await this.logMedication.execute({ petId, ...body, requestingUserId: user.userId });
+    return this.medicationMapper.toResponse(medication, body.reminder?.enabled ?? false, body.reminder?.advanceNotice);
+  }
 
-  getVetVisitsByDateRange = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const { from, to } = req.query as { from?: string; to?: string };
-      if (!from || !to) {
-        res.status(400).json({ message: '`from` and `to` query params are required (YYYY-MM-DD)' });
-        return;
-      }
-      const fromDate = new Date(from);
-      const toDate = new Date(to);
-      toDate.setHours(23, 59, 59, 999);
-      if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
-        res.status(400).json({ message: 'Invalid date format. Use YYYY-MM-DD.' });
-        return;
-      }
-      const visits = await this.listVetVisitsByDateRange.execute(req.auth.userId, fromDate, toDate);
-      res.json(visits.map((v) => this.vetVisitMapper.toResponse(v)));
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  getUpcomingVetVisits = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const visits = await this.healthRepo.findUpcomingVetVisitsByUserId(req.auth.userId);
-      res.json(visits.map((v) => this.vetVisitMapper.toResponse(v)));
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  getMedications = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const summaries = await this.listMedications.execute(req.params.petId, req.auth.userId);
-      res.json(summaries.map((s) =>
-        this.medicationMapper.toResponse(s.medication, s.reminderEnabled, s.advanceNotice)
-      ));
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  createMedication = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const medication = await this.logMedication.execute({
-        petId: req.params.petId,
-        name: req.body.name,
-        dosageAmount: req.body.dosageAmount,
-        dosageUnit: req.body.dosageUnit,
-        schedule: req.body.schedule,
-        startDate: new Date(req.body.startDate),
-        endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
-        notes: req.body.notes,
-        reminder: req.body.reminder,
-        requestingUserId: req.auth.userId,
-      });
-      res.status(201).json(this.medicationMapper.toResponse(
-        medication,
-        req.body.reminder?.enabled ?? false,
-        req.body.reminder?.advanceNotice,
-      ));
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  updateMedicationHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const medication = await this.updateMedication.execute({
-        medicationId: req.params.medicationId,
-        name: req.body.name,
-        dosageAmount: req.body.dosageAmount,
-        dosageUnit: req.body.dosageUnit,
-        schedule: req.body.schedule,
-        startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
-        endDate: req.body.endDate === null ? null : req.body.endDate ? new Date(req.body.endDate) : undefined,
-        notes: req.body.notes !== undefined ? (req.body.notes || null) : undefined,
-        active: req.body.active,
-        reminder: req.body.reminder,
-        requestingUserId: req.auth.userId,
-      });
-      res.json(this.medicationMapper.toResponse(
-        medication,
-        req.body.reminder?.enabled ?? false,
-        req.body.reminder?.advanceNotice,
-      ));
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Put('/:petId/medications/:medicationId')
+  @Validate({ body: UpdateMedicationSchema })
+  async updateMedication(@Param('medicationId') medicationId: string, @Body() body: UpdateMedicationBody, @CurrentUser() user: AuthPayload) {
+    const medication = await this.updateMedication.execute({ medicationId, ...body, requestingUserId: user.userId });
+    return this.medicationMapper.toResponse(medication, body.reminder?.enabled ?? false, body.reminder?.advanceNotice);
+  }
 }

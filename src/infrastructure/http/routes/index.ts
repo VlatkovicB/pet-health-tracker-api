@@ -13,7 +13,7 @@ import { petShareInboxRoutes } from './petShareInboxRoutes';
 import { transferRoutes } from './transferRoutes';
 import { petTransferInboxRoutes } from './petTransferInboxRoutes';
 import { authMiddleware } from '../middleware/authMiddleware';
-import { HealthController } from '../controllers/HealthController';
+import { VetVisitController } from '../controllers/VetVisitController';
 
 export function buildRouter(): Router {
   const router = Router();
@@ -30,8 +30,8 @@ export function buildRouter(): Router {
   router.use('/notes', noteRoutes());
   router.use('/pet-shares', petShareInboxRoutes());
   router.use('/pet-ownership-transfers', petTransferInboxRoutes());
-  router.get('/vet-visits/upcoming', authMiddleware, Container.get(HealthController).getUpcomingVetVisits);
-  router.get('/vet-visits', authMiddleware, Container.get(HealthController).getVetVisitsByDateRange);
+  router.get('/vet-visits/upcoming', authMiddleware, Container.get(VetVisitController).getUpcoming.bind(Container.get(VetVisitController)));
+  router.get('/vet-visits', authMiddleware, Container.get(VetVisitController).getByDateRange.bind(Container.get(VetVisitController)));
 
   return router;
 }
