@@ -7,11 +7,11 @@ export function shareRoutes(): Router {
   const router = Router();
   const controller = Container.get(ShareController);
 
-  router.get('/shared-with-me', authMiddleware, controller.listSharedWithMe);
-  router.get('/:petId/shares', authMiddleware, controller.listForPet);
-  router.post('/:petId/shares', authMiddleware, controller.create);
-  router.put('/:petId/shares/:shareId', authMiddleware, controller.update);
-  router.delete('/:petId/shares/:shareId', authMiddleware, controller.revoke);
+  router.get('/shared-with-me', authMiddleware, controller.listSharedWithMe.bind(controller));
+  router.get('/:petId/shares', authMiddleware, controller.listForPet.bind(controller));
+  router.post('/:petId/shares', authMiddleware, controller.create.bind(controller));
+  router.put('/:petId/shares/:shareId', authMiddleware, controller.update.bind(controller));
+  router.delete('/:petId/shares/:shareId', authMiddleware, controller.revoke.bind(controller));
 
   return router;
 }

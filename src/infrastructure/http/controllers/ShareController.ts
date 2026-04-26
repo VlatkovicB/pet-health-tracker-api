@@ -1,99 +1,64 @@
-import { Request, Response, NextFunction } from 'express';
+import { JsonController, Get, Post, Put, Delete, Body, Param, UseBefore, CurrentUser, HttpCode, OnUndefined } from 'routing-controllers';
 import { Service } from 'typedi';
 import { SharePetUseCase } from '../../../application/share/SharePetUseCase';
 import { UpdateSharePermissionsUseCase } from '../../../application/share/UpdateSharePermissionsUseCase';
 import { RevokeShareUseCase } from '../../../application/share/RevokeShareUseCase';
 import { ListPetSharesUseCase } from '../../../application/share/ListPetSharesUseCase';
-import { ListPendingSharesUseCase } from '../../../application/share/ListPendingSharesUseCase';
-import { AcceptShareUseCase } from '../../../application/share/AcceptShareUseCase';
-import { DeclineShareUseCase } from '../../../application/share/DeclineShareUseCase';
 import { ListSharedPetsUseCase } from '../../../application/share/ListSharedPetsUseCase';
 import { PetShareMapper } from '../../mappers/PetShareMapper';
 import { PetMapper } from '../../mappers/PetMapper';
+import { authMiddleware, AuthPayload } from '../middleware/authMiddleware';
+import { Validate } from '../decorators/Validate';
+import { CreateShareSchema, CreateShareBody, UpdateSharePermissionsSchema, UpdateSharePermissionsBody } from '../schemas/shareSchemas';
 
+@JsonController('/pets')
 @Service()
+@UseBefore(authMiddleware)
 export class ShareController {
   constructor(
     private readonly sharePet: SharePetUseCase,
     private readonly updateSharePermissions: UpdateSharePermissionsUseCase,
     private readonly revokeShare: RevokeShareUseCase,
     private readonly listPetShares: ListPetSharesUseCase,
-    private readonly listPendingShares: ListPendingSharesUseCase,
-    private readonly acceptShare: AcceptShareUseCase,
-    private readonly declineShare: DeclineShareUseCase,
     private readonly listSharedPets: ListSharedPetsUseCase,
     private readonly shareMapper: PetShareMapper,
     private readonly petMapper: PetMapper,
   ) {}
 
-  listForPet = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const shares = await this.listPetShares.execute(req.params.petId, req.auth.userId);
-      res.json(shares.map((s) => this.shareMapper.toResponse(s)));
-    } catch (err) { next(err); }
-  };
+  @Get('/shared-with-me')
+  async listSharedWithMe(@CurrentUser() user: AuthPayload) {
+    const results = await this.listSharedPets.execute(user.userId);
+    return results.map(({ pet, share }) => ({
+      ...this.petMapper.toResponse(pet),
+      permissions: this.shareMapper.toResponse(share).permissions,
+      shareId: share.id.toValue(),
+    }));
+  }
 
-  create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const share = await this.sharePet.execute({
-        petId: req.params.petId,
-        requestingUserId: req.auth.userId,
-        email: req.body.email,
-        permissions: req.body.permissions,
-      });
-      res.status(201).json(this.shareMapper.toResponse(share));
-    } catch (err) { next(err); }
-  };
+  @Get('/:petId/shares')
+  async listForPet(@Param('petId') petId: string, @CurrentUser() user: AuthPayload) {
+    const shares = await this.listPetShares.execute(petId, user.userId);
+    return shares.map(s => this.shareMapper.toResponse(s));
+  }
 
-  update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const { canViewVetVisits, canEditVetVisits, canViewMedications, canEditMedications, canViewNotes, canEditNotes } = req.body;
-      const share = await this.updateSharePermissions.execute({
-        petId: req.params.petId,
-        shareId: req.params.shareId,
-        requestingUserId: req.auth.userId,
-        canViewVetVisits, canEditVetVisits, canViewMedications, canEditMedications, canViewNotes, canEditNotes,
-      });
-      res.json(this.shareMapper.toResponse(share));
-    } catch (err) { next(err); }
-  };
+  @Post('/:petId/shares')
+  @HttpCode(201)
+  @Validate({ body: CreateShareSchema })
+  async create(@Param('petId') petId: string, @Body() body: CreateShareBody, @CurrentUser() user: AuthPayload) {
+    const share = await this.sharePet.execute({ petId, requestingUserId: user.userId, ...body });
+    return this.shareMapper.toResponse(share);
+  }
 
-  revoke = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await this.revokeShare.execute(req.params.petId, req.params.shareId, req.auth.userId);
-      res.status(204).send();
-    } catch (err) { next(err); }
-  };
+  @Put('/:petId/shares/:shareId')
+  @Validate({ body: UpdateSharePermissionsSchema })
+  async update(@Param('petId') petId: string, @Param('shareId') shareId: string, @Body() body: UpdateSharePermissionsBody, @CurrentUser() user: AuthPayload) {
+    const share = await this.updateSharePermissions.execute({ petId, shareId, requestingUserId: user.userId, ...body });
+    return this.shareMapper.toResponse(share);
+  }
 
-  listPending = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const shares = await this.listPendingShares.execute(req.auth.userId);
-      res.json(shares.map((s) => this.shareMapper.toResponse(s)));
-    } catch (err) { next(err); }
-  };
-
-  accept = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await this.acceptShare.execute(req.params.shareId, req.auth.userId);
-      res.status(204).send();
-    } catch (err) { next(err); }
-  };
-
-  decline = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await this.declineShare.execute(req.params.shareId, req.auth.userId);
-      res.status(204).send();
-    } catch (err) { next(err); }
-  };
-
-  listSharedWithMe = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const results = await this.listSharedPets.execute(req.auth.userId);
-      res.json(results.map(({ pet, share }) => ({
-        ...this.petMapper.toResponse(pet),
-        permissions: this.shareMapper.toResponse(share).permissions,
-        shareId: share.id.toValue(),
-      })));
-    } catch (err) { next(err); }
-  };
+  @Delete('/:petId/shares/:shareId')
+  @OnUndefined(204)
+  async revoke(@Param('petId') petId: string, @Param('shareId') shareId: string, @CurrentUser() user: AuthPayload) {
+    await this.revokeShare.execute(petId, shareId, user.userId);
+  }
 }
