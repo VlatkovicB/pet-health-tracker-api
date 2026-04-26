@@ -1,12 +1,20 @@
-import { Request, Response, NextFunction } from 'express';
+import { JsonController, Get, Post, Put, Delete, Body, Param, QueryParams, UseBefore, CurrentUser, HttpCode, OnUndefined, Req } from 'routing-controllers';
+import { Request } from 'express';
 import { Service } from 'typedi';
 import { CreateNoteUseCase } from '../../../application/note/CreateNoteUseCase';
 import { ListNotesUseCase } from '../../../application/note/ListNotesUseCase';
 import { UpdateNoteUseCase } from '../../../application/note/UpdateNoteUseCase';
 import { DeleteNoteUseCase } from '../../../application/note/DeleteNoteUseCase';
 import { AddNoteImageUseCase } from '../../../application/note/AddNoteImageUseCase';
+import { authMiddleware, AuthPayload } from '../middleware/authMiddleware';
+import { uploadNoteImage } from '../middleware/upload';
+import { AppError } from '../../../shared/errors/AppError';
+import { Validate } from '../decorators/Validate';
+import { CreateNoteSchema, CreateNoteBody, UpdateNoteSchema, UpdateNoteBody, ListNotesQuerySchema, ListNotesQuery } from '../schemas/noteSchemas';
 
+@JsonController('/notes')
 @Service()
+@UseBefore(authMiddleware)
 export class NoteController {
   constructor(
     private readonly createNote: CreateNoteUseCase,
@@ -16,76 +24,36 @@ export class NoteController {
     private readonly addNoteImage: AddNoteImageUseCase,
   ) {}
 
-  create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const note = await this.createNote.execute({
-        userId: req.auth.userId,
-        title: req.body.title,
-        description: req.body.description,
-        noteDate: req.body.noteDate,
-        petIds: req.body.petIds,
-        imageUrls: req.body.imageUrls,
-      });
-      res.status(201).json(note);
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Post('/')
+  @HttpCode(201)
+  @Validate({ body: CreateNoteSchema })
+  async create(@Body() body: CreateNoteBody, @CurrentUser() user: AuthPayload) {
+    return this.createNote.execute({ userId: user.userId, ...body });
+  }
 
-  list = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const notes = await this.listNotes.execute({
-        userId: req.auth.userId,
-        petId: req.query.petId as string | undefined,
-        from: req.query.from as string | undefined,
-        to: req.query.to as string | undefined,
-      });
-      res.json(notes);
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Get('/')
+  @Validate({ query: ListNotesQuerySchema })
+  async list(@QueryParams() query: ListNotesQuery, @CurrentUser() user: AuthPayload) {
+    return this.listNotes.execute({ userId: user.userId, ...query });
+  }
 
-  update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const note = await this.updateNote.execute({
-        userId: req.auth.userId,
-        noteId: req.params.noteId,
-        title: req.body.title,
-        description: req.body.description,
-        noteDate: req.body.noteDate,
-        petIds: req.body.petIds,
-      });
-      res.json(note);
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Put('/:noteId')
+  @Validate({ body: UpdateNoteSchema })
+  async update(@Param('noteId') noteId: string, @Body() body: UpdateNoteBody, @CurrentUser() user: AuthPayload) {
+    return this.updateNote.execute({ userId: user.userId, noteId, ...body });
+  }
 
-  delete = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await this.deleteNote.execute({
-        userId: req.auth.userId,
-        noteId: req.params.noteId,
-      });
-      res.status(204).send();
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Delete('/:noteId')
+  @OnUndefined(204)
+  async delete(@Param('noteId') noteId: string, @CurrentUser() user: AuthPayload) {
+    await this.deleteNote.execute({ userId: user.userId, noteId });
+  }
 
-  addImage = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      if (!req.file) { res.status(400).json({ message: 'No file uploaded' }); return; }
-      const imageUrl = `/uploads/notes/${req.file.filename}`;
-      const note = await this.addNoteImage.execute({
-        userId: req.auth.userId,
-        noteId: req.params.noteId,
-        imageUrl,
-      });
-      res.json(note);
-    } catch (err) {
-      next(err);
-    }
-  };
+  @Post('/:noteId/images')
+  @UseBefore(uploadNoteImage.single('image'))
+  async addImage(@Param('noteId') noteId: string, @Req() req: Request, @CurrentUser() user: AuthPayload) {
+    if (!req.file) throw new AppError('No file uploaded', 400);
+    const imageUrl = `/uploads/notes/${req.file.filename}`;
+    return this.addNoteImage.execute({ userId: user.userId, noteId, imageUrl });
+  }
 }
