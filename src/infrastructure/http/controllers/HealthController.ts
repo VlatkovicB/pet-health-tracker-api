@@ -33,15 +33,15 @@ import { PaginationQuerySchema, PaginationQuery } from '../schemas/petSchemas';
 @UseBefore(authMiddleware)
 export class HealthController {
   constructor(
-    private readonly addVetVisit: AddVetVisitUseCase,
-    private readonly addVetVisitImage: AddVetVisitImageUseCase,
-    private readonly updateVetVisit: UpdateVetVisitUseCase,
+    private readonly addVetVisitUseCase: AddVetVisitUseCase,
+    private readonly addVetVisitImageUseCase: AddVetVisitImageUseCase,
+    private readonly updateVetVisitUseCase: UpdateVetVisitUseCase,
     private readonly completeVetVisitUseCase: CompleteVetVisitUseCase,
-    private readonly listVetVisits: ListVetVisitsUseCase,
-    private readonly logMedication: LogMedicationUseCase,
-    private readonly updateMedication: UpdateMedicationUseCase,
-    private readonly listMedications: ListMedicationsUseCase,
-    private readonly configureVetVisitReminder: ConfigureVetVisitReminderUseCase,
+    private readonly listVetVisitsUseCase: ListVetVisitsUseCase,
+    private readonly logMedicationUseCase: LogMedicationUseCase,
+    private readonly updateMedicationUseCase: UpdateMedicationUseCase,
+    private readonly listMedicationsUseCase: ListMedicationsUseCase,
+    private readonly configureVetVisitReminderUseCase: ConfigureVetVisitReminderUseCase,
     private readonly vetVisitMapper: VetVisitMapper,
     private readonly medicationMapper: MedicationMapper,
     private readonly reminderMapper: ReminderMapper,
@@ -51,7 +51,7 @@ export class HealthController {
   @Get('/:petId/vet-visits')
   @Validate({ query: PaginationQuerySchema })
   async getVetVisits(@Param('petId') petId: string, @QueryParams() query: PaginationQuery, @CurrentUser() user: AuthPayload) {
-    const result = await this.listVetVisits.execute(petId, user.userId, query);
+    const result = await this.listVetVisitsUseCase.execute(petId, user.userId, query);
     return { ...result, items: result.items.map(v => this.vetVisitMapper.toResponse(v)) };
   }
 
@@ -59,7 +59,7 @@ export class HealthController {
   @HttpCode(201)
   @Validate({ body: CreateVetVisitSchema })
   async createVetVisit(@Param('petId') petId: string, @Body() body: CreateVetVisitBody, @CurrentUser() user: AuthPayload) {
-    const result = await this.addVetVisit.execute({ ...body, petId, requestingUserId: user.userId });
+    const result = await this.addVetVisitUseCase.execute({ ...body, petId, requestingUserId: user.userId });
     return {
       visit: this.vetVisitMapper.toResponse(result.visit),
       nextVisit: result.nextVisit ? this.vetVisitMapper.toResponse(result.nextVisit) : undefined,
@@ -69,7 +69,7 @@ export class HealthController {
   @Put('/:petId/vet-visits/:visitId')
   @Validate({ body: UpdateVetVisitSchema })
   async updateVetVisit(@Param('visitId') visitId: string, @Body() body: UpdateVetVisitBody, @CurrentUser() user: AuthPayload) {
-    const visit = await this.updateVetVisit.execute({ visitId, ...body, requestingUserId: user.userId });
+    const visit = await this.updateVetVisitUseCase.execute({ visitId, ...body, requestingUserId: user.userId });
     return this.vetVisitMapper.toResponse(visit);
   }
 
@@ -91,7 +91,7 @@ export class HealthController {
   @OnUndefined(204)
   @Validate({ body: ConfigureVetVisitReminderSchema })
   async configureVetVisitReminder(@Param('visitId') visitId: string, @Body() body: ConfigureVetVisitReminderBody, @CurrentUser() user: AuthPayload) {
-    await this.configureVetVisitReminder.execute({ visitId, ...body, requestingUserId: user.userId });
+    await this.configureVetVisitReminderUseCase.execute({ visitId, ...body, requestingUserId: user.userId });
   }
 
   @Post('/:petId/vet-visits/:visitId/images')
@@ -99,13 +99,13 @@ export class HealthController {
   async uploadVetVisitImage(@Param('visitId') visitId: string, @Req() req: Request, @CurrentUser() user: AuthPayload) {
     if (!req.file) throw new AppError('No file uploaded', 400);
     const imageUrl = `/uploads/vet-visits/${req.file.filename}`;
-    const visit = await this.addVetVisitImage.execute(visitId, imageUrl, user.userId);
+    const visit = await this.addVetVisitImageUseCase.execute(visitId, imageUrl, user.userId);
     return this.vetVisitMapper.toResponse(visit);
   }
 
   @Get('/:petId/medications')
   async getMedications(@Param('petId') petId: string, @CurrentUser() user: AuthPayload) {
-    const summaries = await this.listMedications.execute(petId, user.userId);
+    const summaries = await this.listMedicationsUseCase.execute(petId, user.userId);
     return summaries.map(s => this.medicationMapper.toResponse(s.medication, s.reminderEnabled, s.advanceNotice));
   }
 
@@ -113,14 +113,14 @@ export class HealthController {
   @HttpCode(201)
   @Validate({ body: CreateMedicationSchema })
   async createMedication(@Param('petId') petId: string, @Body() body: CreateMedicationBody, @CurrentUser() user: AuthPayload) {
-    const medication = await this.logMedication.execute({ petId, ...body, requestingUserId: user.userId });
+    const medication = await this.logMedicationUseCase.execute({ petId, ...body, requestingUserId: user.userId });
     return this.medicationMapper.toResponse(medication, body.reminder?.enabled ?? false, body.reminder?.advanceNotice);
   }
 
   @Put('/:petId/medications/:medicationId')
   @Validate({ body: UpdateMedicationSchema })
   async updateMedication(@Param('medicationId') medicationId: string, @Body() body: UpdateMedicationBody, @CurrentUser() user: AuthPayload) {
-    const medication = await this.updateMedication.execute({ medicationId, ...body, requestingUserId: user.userId });
+    const medication = await this.updateMedicationUseCase.execute({ medicationId, ...body, requestingUserId: user.userId });
     return this.medicationMapper.toResponse(medication, body.reminder?.enabled ?? false, body.reminder?.advanceNotice);
   }
 }
