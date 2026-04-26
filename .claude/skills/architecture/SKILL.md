@@ -8,7 +8,8 @@ description: Deep architecture reference for pet-health-tracker-api — DDD laye
 | Layer | Technology |
 |---|---|
 | Runtime | Node.js + TypeScript |
-| Framework | Express |
+| Framework | Express + routing-controllers |
+| Validation | Zod (via custom `@Validate` decorator) |
 | ORM | sequelize-typescript |
 | Database | PostgreSQL |
 | Auth | JWT (`jsonwebtoken`) + bcrypt |
@@ -40,9 +41,10 @@ src/
       repositories/        Sequelize implementations of domain repository interfaces
     mappers/               Bidirectional model ↔ domain ↔ response DTO conversions
     http/
-      controllers/         Express controller classes (injected via typedi)
+      controllers/         routing-controllers decorator classes (@JsonController, @Get, @Post, etc.)
+      decorators/          Custom decorators — @Validate({ body?, query? }) for Zod validation
+      schemas/             Zod schemas + inferred types, one file per resource
       middleware/          Auth, error handling, file upload
-      routes/              Express Router builders
     email/                 EmailService (nodemailer)
     external/              Google Places API client
     queue/                 BullMQ queues, ReminderSchedulerService, ReminderWorker
@@ -150,7 +152,7 @@ Injectable `@Service()` classes. Each has three methods:
 - `toResponse(entity)` — domain entity → response DTO
 
 ### Controllers (`infrastructure/http/controllers/`)
-`@Service()` classes with arrow-function handlers. `req.auth.userId` set by `authMiddleware`.
+`@JsonController` + `@Service()` classes using routing-controllers decorators. Auth enforced via `@UseBefore(authMiddleware)` at the class level (all except `AuthController`). `@CurrentUser()` resolves to `req.auth` (set by `authMiddleware`). Input validated by `@Validate({ body?, query? })` on mutation/query methods — Zod schemas live in `infrastructure/http/schemas/`. Return values are auto-serialized as JSON; no `res.json()` or try/catch needed.
 
 - `AuthController` — register, login
 - `UserController` — getMe, updateTheme
@@ -161,7 +163,7 @@ Injectable `@Service()` classes. Each has three methods:
 - `PlacesController` — search, details (Google Places proxy)
 
 ### Middleware
-- `authMiddleware` — validates JWT, attaches `req.auth.userId`
+- `authMiddleware` — validates JWT, attaches `req.auth` (`{ userId, email }`); applied per-controller via `@UseBefore(authMiddleware)`, not globally
 - `errorMiddleware` — maps `AppError` subclasses to HTTP status codes
 - `upload.ts` — two multer instances: `uploadImage` (→ `uploads/vet-visits/`) and `uploadPetPhoto` (→ `uploads/pets/`); UUID filenames, 10 MB limit
 
@@ -225,6 +227,7 @@ GET    /api/v1/places/details                      ← Google Places details pro
 - **DDD with OOP** — domain entities use static factory methods (`create`, `reconstitute`, `addImage`). `Entity.props` is `protected`; use cases access state only via public getters.
 - **Injectable mappers** — mappers are `@Service()` instances injected via constructor, not static classes.
 - **BullMQ over cron** — reminder jobs survive restarts; repeatable jobs keyed by entity + cron expression so schedule changes cleanly replace old jobs.
+- **routing-controllers + Zod** — controllers use `@JsonController`, `@Get`/`@Post`/etc. from `routing-controllers`. `app.ts` uses `useExpressServer(app, { container: Container, defaultErrorHandler: false, currentUserChecker: action => action.request.auth })`. Zod validation via `@Validate({ body?, query? })` — a method decorator wrapping `@UseBefore`; mutates `req.body`/`req.query` with parsed data and throws `ValidationError` on failure.
 - **`sync({ alter: true })`** — DB schema kept in sync by Sequelize on startup; no migration files. `pnpm seed` uses `force: true` to drop and recreate all tables.
 - **Flat uploads directory** — files served statically from `/uploads`; URLs stored as relative paths so server URL can change without a DB migration.
 - **VetWorkHours as separate table** — 7 rows per vet (one per day); `WorkHoursEditor` on the client manages these as a structured array.
