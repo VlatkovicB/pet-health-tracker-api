@@ -24,6 +24,15 @@ export interface PetShareResponseDto {
   createdAt: string;
 }
 
+export interface PetShareOwnerResponseDto {
+  id: string;
+  petId: string;
+  invitedEmail: string;
+  status: 'pending' | 'accepted';
+  permissions: SharePermissionsDto;
+  createdAt: string;
+}
+
 @Service()
 export class PetShareMapper {
   toDomain(model: PetShareModel): PetShare {
@@ -79,6 +88,24 @@ export class PetShareMapper {
       status: details.status,
       permissions: details.permissions,
       createdAt: details.createdAt.toISOString(),
+    };
+  }
+
+  toOwnerResponse(share: PetShare): PetShareOwnerResponseDto {
+    return {
+      id: share.id.toValue(),
+      petId: share.petId,
+      invitedEmail: share.invitedEmail,
+      status: share.status,
+      permissions: {
+        canViewVetVisits: share.canViewVetVisits,
+        canEditVetVisits: share.canEditVetVisits,
+        canViewMedications: share.canViewMedications,
+        canEditMedications: share.canEditMedications,
+        canViewNotes: share.canViewNotes,
+        canEditNotes: share.canEditNotes,
+      },
+      createdAt: share.createdAt.toISOString(),
     };
   }
 }

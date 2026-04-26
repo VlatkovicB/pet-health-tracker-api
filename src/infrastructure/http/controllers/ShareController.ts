@@ -30,7 +30,7 @@ export class ShareController {
     const results = await this.listSharedPets.execute(user.userId);
     return results.map(({ pet, share }) => ({
       ...this.petMapper.toResponse(pet),
-      permissions: this.shareMapper.toResponse(share).permissions,
+      permissions: this.shareMapper.toOwnerResponse(share).permissions,
       shareId: share.id.toValue(),
     }));
   }
@@ -38,7 +38,7 @@ export class ShareController {
   @Get('/:petId/shares')
   async listForPet(@Param('petId') petId: string, @CurrentUser() user: AuthPayload) {
     const shares = await this.listPetShares.execute(petId, user.userId);
-    return shares.map(s => this.shareMapper.toResponse(s));
+    return shares.map(s => this.shareMapper.toOwnerResponse(s));
   }
 
   @Post('/:petId/shares')
@@ -46,14 +46,14 @@ export class ShareController {
   @Validate({ body: CreateShareSchema })
   async create(@Param('petId') petId: string, @Body() body: CreateShareBody, @CurrentUser() user: AuthPayload) {
     const share = await this.sharePet.execute({ petId, requestingUserId: user.userId, ...body });
-    return this.shareMapper.toResponse(share);
+    return this.shareMapper.toOwnerResponse(share);
   }
 
   @Put('/:petId/shares/:shareId')
   @Validate({ body: UpdateSharePermissionsSchema })
   async update(@Param('petId') petId: string, @Param('shareId') shareId: string, @Body() body: UpdateSharePermissionsBody, @CurrentUser() user: AuthPayload) {
     const share = await this.updateSharePermissions.execute({ petId, shareId, requestingUserId: user.userId, ...body });
-    return this.shareMapper.toResponse(share);
+    return this.shareMapper.toOwnerResponse(share);
   }
 
   @Delete('/:petId/shares/:shareId')
