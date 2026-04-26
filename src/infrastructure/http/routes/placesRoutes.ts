@@ -7,8 +7,8 @@ export function placesRoutes(): Router {
   const router = Router();
   const controller = Container.get(PlacesController);
 
-  router.get('/search', authMiddleware, controller.search);
-  router.get('/details', authMiddleware, controller.details);
+  router.get('/search', authMiddleware, controller.search.bind(controller));
+  router.get('/details', authMiddleware, controller.details.bind(controller));
 
   return router;
 }
