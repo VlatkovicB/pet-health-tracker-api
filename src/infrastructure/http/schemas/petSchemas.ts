@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+const toDate = (s: string) => new Date(s);
+
 export const CreatePetSchema = z.object({
   name: z.string().min(1),
   species: z.string().min(1),
@@ -19,7 +21,10 @@ export const PaginationQuerySchema = z.object({
 export type PaginationQuery = z.infer<typeof PaginationQuerySchema>;
 
 export const VetVisitsByPetQuerySchema = PaginationQuerySchema.extend({
-  from: z.string().optional(),
-  to: z.string().optional(),
-});
+  from: z.string().min(1).transform(toDate).optional(),
+  to: z.string().min(1).transform(toDate).optional(),
+}).refine(
+  (data) => (data.from == null) === (data.to == null),
+  { message: 'Both `from` and `to` must be provided together, or neither.' },
+);
 export type VetVisitsByPetQuery = z.infer<typeof VetVisitsByPetQuerySchema>;

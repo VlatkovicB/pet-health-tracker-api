@@ -52,11 +52,13 @@ export class HealthController {
   @Validate({ query: VetVisitsByPetQuerySchema })
   async getVetVisits(@Param('petId') petId: string, @QueryParams() query: VetVisitsByPetQuery, @CurrentUser() user: AuthPayload) {
     if (query.from && query.to) {
+      const endDate = new Date(query.to);
+      endDate.setHours(23, 59, 59, 999);
       const visits = await this.listVetVisitsUseCase.executeByDateRange(
         petId,
         user.userId,
-        new Date(query.from),
-        new Date(query.to),
+        query.from,
+        endDate,
       );
       return visits.map((v) => this.vetVisitMapper.toResponse(v));
     }
