@@ -2,6 +2,7 @@ import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, PrimaryKey, Ta
 import { UserModel } from './UserModel';
 import { MedicationModel } from './MedicationModel';
 import { VetVisitModel } from './VetVisitModel';
+import { PET_SPECIES, type PetSpecies } from '../../../domain/pet/PetSpecies';
 
 @Table({ tableName: 'pets', timestamps: false })
 export class PetModel extends Model {
@@ -12,8 +13,8 @@ export class PetModel extends Model {
   @Column({ type: DataType.STRING, allowNull: false })
   declare name: string;
 
-  @Column({ type: DataType.STRING, allowNull: false })
-  declare species: string;
+  @Column({ type: DataType.ENUM(...PET_SPECIES), allowNull: false })
+  declare species: PetSpecies;
 
   @Column({ type: DataType.STRING, allowNull: true })
   declare breed: string | null;

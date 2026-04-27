@@ -1,10 +1,11 @@
 import { Inject, Service } from 'typedi';
 import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
 import { Pet } from '../../domain/pet/Pet';
+import type { PetSpecies } from '../../domain/pet/PetSpecies';
 
 interface AddPetInput {
   name: string;
-  species: string;
+  species: PetSpecies;
   breed?: string;
   birthDate?: Date;
   requestingUserId: string;

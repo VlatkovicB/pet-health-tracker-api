@@ -2,11 +2,12 @@ import { Service } from 'typedi';
 import { PetModel } from '../db/models/PetModel';
 import { Pet } from '../../domain/pet/Pet';
 import { UniqueEntityId } from '../../domain/shared/UniqueEntityId';
+import type { PetSpecies } from '../../domain/pet/PetSpecies';
 
 export interface PetResponseDto {
   id: string;
   name: string;
-  species: string;
+  species: PetSpecies;
   breed?: string;
   birthDate?: string;
   photoUrl?: string;

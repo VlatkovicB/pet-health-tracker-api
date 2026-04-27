@@ -3,11 +3,12 @@ import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
 import { Pet } from '../../domain/pet/Pet';
 import { UniqueEntityId } from '../../domain/shared/UniqueEntityId';
 import { PetAccessService } from './PetAccessService';
+import type { PetSpecies } from '../../domain/pet/PetSpecies';
 
 export interface UpdatePetInput {
   petId: string;
   name?: string;
-  species?: string;
+  species?: PetSpecies;
   breed?: string;
   birthDate?: Date;
   photoUrl?: string;

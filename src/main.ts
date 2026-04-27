@@ -13,6 +13,8 @@ async function main(): Promise<void> {
   registerDependencies();
 
   await sequelize.authenticate();
+  // Normalize legacy capitalized species values before ENUM column type is enforced
+  await sequelize.query(`UPDATE pets SET species = LOWER(species) WHERE species != LOWER(species)`).catch(() => { /* table may not exist on fresh install */ });
   await sequelize.sync({ alter: true });
   console.log('Database connected');
 

@@ -76,11 +76,11 @@ const VETS = [
 // ---------------------------------------------------------------------------
 
 const PETS = [
-  { name: 'Biscuit',  species: 'Dog', breed: 'Golden Retriever', birthDate: yearsAgo(4) },
-  { name: 'Luna',     species: 'Cat', breed: 'Maine Coon',        birthDate: yearsAgo(3) },
-  { name: 'Peanut',   species: 'Dog', breed: 'Beagle',            birthDate: yearsAgo(6) },
-  { name: 'Whiskers', species: 'Cat', breed: 'Scottish Fold',     birthDate: yearsAgo(2) },
-  { name: 'Max',      species: 'Dog', breed: 'German Shepherd',   birthDate: yearsAgo(5) },
+  { name: 'Biscuit',  species: 'dog', breed: 'Golden Retriever', birthDate: yearsAgo(4) },
+  { name: 'Luna',     species: 'cat', breed: 'Maine Coon',        birthDate: yearsAgo(3) },
+  { name: 'Peanut',   species: 'dog', breed: 'Beagle',            birthDate: yearsAgo(6) },
+  { name: 'Whiskers', species: 'cat', breed: 'Scottish Fold',     birthDate: yearsAgo(2) },
+  { name: 'Max',      species: 'dog', breed: 'German Shepherd',   birthDate: yearsAgo(5) },
 ];
 
 // ---------------------------------------------------------------------------

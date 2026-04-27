@@ -1,9 +1,10 @@
 import { AggregateRoot } from '../shared/AggregateRoot';
 import { UniqueEntityId } from '../shared/UniqueEntityId';
+import type { PetSpecies } from './PetSpecies';
 
 interface PetProps {
   name: string;
-  species: string;
+  species: PetSpecies;
   breed?: string;
   birthDate?: Date;
   userId: string;
@@ -14,7 +15,7 @@ interface PetProps {
 
 export class Pet extends AggregateRoot<PetProps> {
   get name(): string { return this.props.name; }
-  get species(): string { return this.props.species; }
+  get species(): PetSpecies { return this.props.species; }
   get breed(): string | undefined { return this.props.breed; }
   get birthDate(): Date | undefined { return this.props.birthDate; }
   get userId(): string { return this.props.userId; }

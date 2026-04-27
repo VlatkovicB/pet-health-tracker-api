@@ -1,10 +1,11 @@
 import { z } from 'zod';
+import { PET_SPECIES } from '../../../domain/pet/PetSpecies';
 
 const toDate = (s: string) => new Date(s);
 
 export const CreatePetSchema = z.object({
   name: z.string().min(1),
-  species: z.string().min(1),
+  species: z.enum(PET_SPECIES),
   breed: z.string().optional(),
   birthDate: z.string().transform(s => new Date(s)).optional(),
   color: z.string().optional(),
