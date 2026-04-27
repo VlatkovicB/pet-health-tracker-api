@@ -15,4 +15,9 @@ export class ListVetVisitsUseCase {
     await this.petAccessService.assertCanAccess(petId, requestingUserId, 'view_vet_visits');
     return this.healthRepo.findVetVisitsByPetId(petId, pagination);
   }
+
+  async executeByDateRange(petId: string, requestingUserId: string, from: Date, to: Date): Promise<VetVisit[]> {
+    await this.petAccessService.assertCanAccess(petId, requestingUserId, 'view_vet_visits');
+    return this.healthRepo.findVetVisitsByPetIdAndDateRange(petId, from, to);
+  }
 }

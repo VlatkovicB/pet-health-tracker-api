@@ -26,7 +26,7 @@ import {
   UpdateMedicationSchema, UpdateMedicationBody,
 } from '../schemas/healthSchemas';
 import { ConfigureVetVisitReminderSchema, ConfigureVetVisitReminderBody } from '../schemas/reminderSchemas';
-import { PaginationQuerySchema, PaginationQuery } from '../schemas/petSchemas';
+import { PaginationQuerySchema, PaginationQuery, VetVisitsByPetQuerySchema, VetVisitsByPetQuery } from '../schemas/petSchemas';
 
 @JsonController('/pets')
 @Service()
@@ -49,10 +49,19 @@ export class HealthController {
   ) {}
 
   @Get('/:petId/vet-visits')
-  @Validate({ query: PaginationQuerySchema })
-  async getVetVisits(@Param('petId') petId: string, @QueryParams() query: PaginationQuery, @CurrentUser() user: AuthPayload) {
+  @Validate({ query: VetVisitsByPetQuerySchema })
+  async getVetVisits(@Param('petId') petId: string, @QueryParams() query: VetVisitsByPetQuery, @CurrentUser() user: AuthPayload) {
+    if (query.from && query.to) {
+      const visits = await this.listVetVisitsUseCase.executeByDateRange(
+        petId,
+        user.userId,
+        new Date(query.from),
+        new Date(query.to),
+      );
+      return visits.map((v) => this.vetVisitMapper.toResponse(v));
+    }
     const result = await this.listVetVisitsUseCase.execute(petId, user.userId, query);
-    return { ...result, items: result.items.map(v => this.vetVisitMapper.toResponse(v)) };
+    return { ...result, items: result.items.map((v) => this.vetVisitMapper.toResponse(v)) };
   }
 
   @Post('/:petId/vet-visits')

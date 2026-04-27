@@ -17,3 +17,9 @@ export const PaginationQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 export type PaginationQuery = z.infer<typeof PaginationQuerySchema>;
+
+export const VetVisitsByPetQuerySchema = PaginationQuerySchema.extend({
+  from: z.string().optional(),
+  to: z.string().optional(),
+});
+export type VetVisitsByPetQuery = z.infer<typeof VetVisitsByPetQuerySchema>;

@@ -44,6 +44,17 @@ export class SequelizeHealthRecordRepository implements HealthRecordRepository {
     return toResult(rows.map((m) => this.vetVisitMapper.toDomain(m)), count, page, limit);
   }
 
+  async findVetVisitsByPetIdAndDateRange(petId: string, from: Date, to: Date): Promise<VetVisit[]> {
+    const rows = await VetVisitModel.findAll({
+      where: {
+        petId,
+        visitDate: { [Op.between]: [from, to] },
+      },
+      order: [['visit_date', 'ASC']],
+    });
+    return rows.map((m) => this.vetVisitMapper.toDomain(m));
+  }
+
   async findUpcomingVetVisitsByUserId(userId: string): Promise<VetVisit[]> {
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
