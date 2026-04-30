@@ -7,7 +7,7 @@ const PermissionsSchema = z.object({
   canEditMedications: z.boolean().default(false),
   canViewNotes: z.boolean().default(true),
   canEditNotes: z.boolean().default(false),
-  canViewPhotos: z.boolean().default(true),
+  canViewPhotos: z.boolean().default(false),
   canEditPhotos: z.boolean().default(false),
 });
 
@@ -20,7 +20,7 @@ export const CreateShareSchema = z.object({
     canEditMedications: false,
     canViewNotes: true,
     canEditNotes: false,
-    canViewPhotos: true,
+    canViewPhotos: false,
     canEditPhotos: false,
   }),
 });
