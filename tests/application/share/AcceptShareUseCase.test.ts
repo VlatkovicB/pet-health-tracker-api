@@ -13,6 +13,7 @@ function makeShare(userId: string): PetShare {
       canViewVetVisits: false, canEditVetVisits: false,
       canViewMedications: false, canEditMedications: false,
       canViewNotes: false, canEditNotes: false,
+      canViewPhotos: false, canEditPhotos: false,
       createdAt: new Date(),
     },
     new UniqueEntityId('share-1'),

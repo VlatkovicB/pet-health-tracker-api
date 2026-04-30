@@ -11,6 +11,8 @@ export interface SharePermissionsDto {
   canEditMedications: boolean;
   canViewNotes: boolean;
   canEditNotes: boolean;
+  canViewPhotos: boolean;
+  canEditPhotos: boolean;
 }
 
 export interface PetShareResponseDto {
@@ -54,6 +56,8 @@ export class PetShareMapper {
         canEditMedications: model.canEditMedications,
         canViewNotes: model.canViewNotes,
         canEditNotes: model.canEditNotes,
+        canViewPhotos: model.canViewPhotos,
+        canEditPhotos: model.canEditPhotos,
         createdAt: model.createdAt,
       },
       new UniqueEntityId(model.id),
@@ -74,6 +78,8 @@ export class PetShareMapper {
       canEditMedications: share.canEditMedications,
       canViewNotes: share.canViewNotes,
       canEditNotes: share.canEditNotes,
+      canViewPhotos: share.canViewPhotos,
+      canEditPhotos: share.canEditPhotos,
       createdAt: share.createdAt,
     };
   }
@@ -104,6 +110,8 @@ export class PetShareMapper {
         canEditMedications: share.canEditMedications,
         canViewNotes: share.canViewNotes,
         canEditNotes: share.canEditNotes,
+        canViewPhotos: share.canViewPhotos,
+        canEditPhotos: share.canEditPhotos,
       },
       createdAt: share.createdAt.toISOString(),
     };

@@ -21,6 +21,8 @@ describe('PetShareMapper.toResponse', () => {
       canEditMedications: true,
       canViewNotes: false,
       canEditNotes: false,
+      canViewPhotos: false,
+      canEditPhotos: false,
     },
     createdAt: new Date('2026-04-20T10:00:00.000Z'),
   };
@@ -41,6 +43,8 @@ describe('PetShareMapper.toResponse', () => {
         canEditMedications: true,
         canViewNotes: false,
         canEditNotes: false,
+        canViewPhotos: false,
+        canEditPhotos: false,
       },
       createdAt: '2026-04-20T10:00:00.000Z',
     });
@@ -77,6 +81,8 @@ describe('PetShareMapper.toOwnerResponse', () => {
         canEditMedications: false,
         canViewNotes: true,
         canEditNotes: true,
+        canViewPhotos: false,
+        canEditPhotos: false,
         createdAt: new Date('2026-04-21T08:00:00.000Z'),
       },
       new UniqueEntityId('share-444'),

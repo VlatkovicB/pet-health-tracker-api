@@ -12,6 +12,8 @@ export interface PetShareDetails {
     canEditMedications: boolean;
     canViewNotes: boolean;
     canEditNotes: boolean;
+    canViewPhotos: boolean;
+    canEditPhotos: boolean;
   };
   createdAt: Date;
 }

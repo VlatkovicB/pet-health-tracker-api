@@ -54,6 +54,8 @@ export class SequelizePetShareRepository implements PetShareRepository {
           canEditMedications: m.canEditMedications,
           canViewNotes: m.canViewNotes,
           canEditNotes: m.canEditNotes,
+          canViewPhotos: m.canViewPhotos,
+          canEditPhotos: m.canEditPhotos,
         },
         createdAt: m.createdAt,
       };

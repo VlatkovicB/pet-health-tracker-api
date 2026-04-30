@@ -14,6 +14,8 @@ interface PetShareProps {
   canEditMedications: boolean;
   canViewNotes: boolean;
   canEditNotes: boolean;
+  canViewPhotos: boolean;
+  canEditPhotos: boolean;
   createdAt: Date;
 }
 
@@ -29,6 +31,8 @@ export class PetShare extends AggregateRoot<PetShareProps> {
   get canEditMedications(): boolean { return this.props.canEditMedications; }
   get canViewNotes(): boolean { return this.props.canViewNotes; }
   get canEditNotes(): boolean { return this.props.canEditNotes; }
+  get canViewPhotos(): boolean { return this.props.canViewPhotos; }
+  get canEditPhotos(): boolean { return this.props.canEditPhotos; }
   get createdAt(): Date { return this.props.createdAt; }
 
   accept(): void { this.props.status = 'accepted'; }
@@ -42,6 +46,8 @@ export class PetShare extends AggregateRoot<PetShareProps> {
     canEditMedications: boolean;
     canViewNotes: boolean;
     canEditNotes: boolean;
+    canViewPhotos: boolean;
+    canEditPhotos: boolean;
   }): void {
     this.props.canViewVetVisits = perms.canViewVetVisits;
     this.props.canEditVetVisits = perms.canEditVetVisits;
@@ -49,6 +55,8 @@ export class PetShare extends AggregateRoot<PetShareProps> {
     this.props.canEditMedications = perms.canEditMedications;
     this.props.canViewNotes = perms.canViewNotes;
     this.props.canEditNotes = perms.canEditNotes;
+    this.props.canViewPhotos = perms.canViewPhotos;
+    this.props.canEditPhotos = perms.canEditPhotos;
   }
 
   hasPermission(permission: PetPermission): boolean {
@@ -61,14 +69,22 @@ export class PetShare extends AggregateRoot<PetShareProps> {
     if (permission === 'edit_medications') return this.props.canEditMedications;
     if (permission === 'view_notes') return this.props.canViewNotes || this.props.canEditNotes;
     if (permission === 'edit_notes') return this.props.canEditNotes;
+    if (permission === 'view_photos') return this.props.canViewPhotos || this.props.canEditPhotos;
+    if (permission === 'edit_photos') return this.props.canEditPhotos;
     return false;
   }
 
   static create(
-    props: Omit<PetShareProps, 'createdAt' | 'status'>,
+    props: Omit<PetShareProps, 'createdAt' | 'status' | 'canViewPhotos' | 'canEditPhotos'> & { canViewPhotos?: boolean; canEditPhotos?: boolean },
     id?: UniqueEntityId,
   ): PetShare {
-    return new PetShare({ ...props, status: 'pending', createdAt: new Date() }, id);
+    return new PetShare({
+      canViewPhotos: false,
+      canEditPhotos: false,
+      ...props,
+      status: 'pending',
+      createdAt: new Date(),
+    }, id);
   }
 
   static reconstitute(props: PetShareProps, id: UniqueEntityId): PetShare {

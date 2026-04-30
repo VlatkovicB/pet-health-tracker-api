@@ -4,4 +4,5 @@ export type PetPermission =
   | 'view_vet_visits' | 'edit_vet_visits'
   | 'view_medications' | 'edit_medications'
   | 'view_notes' | 'edit_notes'
-  | 'view_weight' | 'edit_weight';
+  | 'view_weight' | 'edit_weight'
+  | 'view_photos' | 'edit_photos';

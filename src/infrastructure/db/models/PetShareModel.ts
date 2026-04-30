@@ -52,6 +52,12 @@ export class PetShareModel extends Model {
   @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false, field: 'can_edit_notes' })
   declare canEditNotes: boolean;
 
+  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false, field: 'can_view_photos' })
+  declare canViewPhotos: boolean;
+
+  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false, field: 'can_edit_photos' })
+  declare canEditPhotos: boolean;
+
   @Column({ type: DataType.DATE, allowNull: false, field: 'created_at' })
   declare createdAt: Date;
 

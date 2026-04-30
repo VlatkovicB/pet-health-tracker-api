@@ -12,6 +12,8 @@ const base = {
   canEditMedications: false,
   canViewNotes: false,
   canEditNotes: false,
+  canViewPhotos: false,
+  canEditPhotos: false,
 };
 
 describe('PetShare', () => {

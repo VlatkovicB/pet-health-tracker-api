@@ -14,6 +14,8 @@ interface UpdatePermissionsInput {
   canEditMedications: boolean;
   canViewNotes: boolean;
   canEditNotes: boolean;
+  canViewPhotos: boolean;
+  canEditPhotos: boolean;
 }
 
 @Service()
@@ -35,6 +37,8 @@ export class UpdateSharePermissionsUseCase {
       canEditMedications: input.canEditMedications,
       canViewNotes: input.canViewNotes,
       canEditNotes: input.canEditNotes,
+      canViewPhotos: input.canViewPhotos,
+      canEditPhotos: input.canEditPhotos,
     });
     await this.shareRepo.save(share);
     return share;
