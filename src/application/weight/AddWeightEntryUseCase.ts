@@ -17,12 +17,12 @@ export interface AddWeightEntryInput {
 export class AddWeightEntryUseCase {
   constructor(
     @Inject(WEIGHT_ENTRY_REPOSITORY) private readonly repo: WeightEntryRepository,
-    private readonly petAccess: PetAccessService,
+    private readonly petAccessService: PetAccessService,
     private readonly mapper: WeightEntryMapper,
   ) {}
 
   async execute(input: AddWeightEntryInput): Promise<WeightEntryResponseDto> {
-    await this.petAccess.assertCanAccess(input.petId, input.userId, 'edit_weight');
+    await this.petAccessService.assertCanAccess(input.petId, input.userId, 'edit_weight');
     const entry = WeightEntry.create({
       petId: input.petId,
       date: input.date,
