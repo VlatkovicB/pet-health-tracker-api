@@ -11,6 +11,7 @@ import { NoteModel } from './models/NoteModel';
 import { NotePetTagModel } from './models/NotePetTagModel';
 import { PetShareModel } from './models/PetShareModel';
 import { PetOwnershipTransferModel } from './models/PetOwnershipTransferModel';
+import { WeightEntryModel } from './models/WeightEntryModel';
 
 export const sequelize = new Sequelize({
   dialect: 'postgres',
@@ -33,5 +34,6 @@ export const sequelize = new Sequelize({
     NotePetTagModel,
     PetShareModel,
     PetOwnershipTransferModel,
+    WeightEntryModel,
   ],
 });

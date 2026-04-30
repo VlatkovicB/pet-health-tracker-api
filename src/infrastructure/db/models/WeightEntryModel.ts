@@ -14,10 +14,10 @@ export class WeightEntryModel extends Model {
   @Column({ type: DataType.DATEONLY, allowNull: false })
   declare date: string;
 
-  @Column({ type: DataType.DECIMAL(10, 3), allowNull: false })
+  @Column({ type: DataType.DECIMAL(10, 2), allowNull: false })
   declare value: number;
 
-  @Column({ type: DataType.STRING(4), allowNull: false })
+  @Column({ type: DataType.ENUM('kg', 'lb'), allowNull: false })
   declare unit: string;
 
   @Column({ type: DataType.TEXT, allowNull: true })
