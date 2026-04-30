@@ -8,6 +8,7 @@ import { SequelizeNoteRepository } from './infrastructure/db/repositories/Sequel
 import { SequelizePetShareRepository } from './infrastructure/db/repositories/SequelizePetShareRepository';
 import { SequelizePetOwnershipTransferRepository } from './infrastructure/db/repositories/SequelizePetOwnershipTransferRepository';
 import { SequelizeWeightEntryRepository } from './infrastructure/db/repositories/SequelizeWeightEntryRepository';
+import { SequelizePhotoRepository } from './infrastructure/db/repositories/SequelizePhotoRepository';
 import { NOTE_REPOSITORY } from './domain/note/NoteRepository';
 import { PET_SHARE_REPOSITORY } from './domain/share/PetShareRepository';
 import { PET_OWNERSHIP_TRANSFER_REPOSITORY } from './domain/transfer/PetOwnershipTransferRepository';
@@ -17,6 +18,7 @@ import { HEALTH_RECORD_REPOSITORY } from './domain/health/HealthRecordRepository
 import { VET_REPOSITORY } from './domain/vet/VetRepository';
 import { REMINDER_REPOSITORY } from './domain/reminder/ReminderRepository';
 import { WEIGHT_ENTRY_REPOSITORY } from './domain/weight/WeightEntryRepository';
+import { PHOTO_REPOSITORY } from './domain/photo/PhotoRepository';
 
 export function registerDependencies(): void {
   Container.set(USER_REPOSITORY, Container.get(SequelizeUserRepository));
@@ -28,4 +30,5 @@ export function registerDependencies(): void {
   Container.set(PET_SHARE_REPOSITORY, Container.get(SequelizePetShareRepository));
   Container.set(PET_OWNERSHIP_TRANSFER_REPOSITORY, Container.get(SequelizePetOwnershipTransferRepository));
   Container.set(WEIGHT_ENTRY_REPOSITORY, Container.get(SequelizeWeightEntryRepository));
+  Container.set(PHOTO_REPOSITORY, Container.get(SequelizePhotoRepository));
 }
