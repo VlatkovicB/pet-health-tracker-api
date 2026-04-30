@@ -20,6 +20,7 @@ import { NoteController } from './infrastructure/http/controllers/NoteController
 import { PetShareInboxController } from './infrastructure/http/controllers/PetShareInboxController';
 import { PetTransferInboxController } from './infrastructure/http/controllers/PetTransferInboxController';
 import { PlacesController } from './infrastructure/http/controllers/PlacesController';
+import { WeightController } from './infrastructure/http/controllers/WeightController';
 
 export function createApp(): express.Application {
   useContainer(Container);
@@ -46,6 +47,7 @@ export function createApp(): express.Application {
       PetShareInboxController,
       PetTransferInboxController,
       PlacesController,
+      WeightController,
     ],
     defaultErrorHandler: false,
     currentUserChecker: (action) => action.request.auth,
