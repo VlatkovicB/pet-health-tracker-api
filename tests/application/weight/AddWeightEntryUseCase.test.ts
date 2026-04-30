@@ -59,7 +59,7 @@ describe('AddWeightEntryUseCase', () => {
     expect(result.value).toBe(4.2);
     expect(result.unit).toBe('kg');
     expect(repo.save).toHaveBeenCalledTimes(1);
-    expect(petAccess.assertCanAccess).toHaveBeenCalledWith('pet-1', 'user-1', 'view_pet');
+    expect(petAccess.assertCanAccess).toHaveBeenCalledWith('pet-1', 'user-1', 'edit_weight');
   });
 
   it('propagates ForbiddenError when user cannot access pet', async () => {

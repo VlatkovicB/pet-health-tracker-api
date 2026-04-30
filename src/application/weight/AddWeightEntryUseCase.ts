@@ -22,7 +22,7 @@ export class AddWeightEntryUseCase {
   ) {}
 
   async execute(input: AddWeightEntryInput): Promise<WeightEntryResponseDto> {
-    await this.petAccess.assertCanAccess(input.petId, input.userId, 'view_pet');
+    await this.petAccess.assertCanAccess(input.petId, input.userId, 'edit_weight');
     const entry = WeightEntry.create({
       petId: input.petId,
       date: input.date,
