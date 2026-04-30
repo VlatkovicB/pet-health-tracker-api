@@ -2,20 +2,31 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } fro
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Service } from 'typedi';
 
+export const DEFAULT_SIGNED_URL_TTL_SECONDS = 900;
+
 @Service()
 export class R2Service {
   private readonly client: S3Client;
   private readonly bucket: string;
 
   constructor() {
-    this.bucket = process.env.R2_BUCKET_NAME!;
+    const accountId = process.env.R2_ACCOUNT_ID;
+    const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+    const bucket = process.env.R2_BUCKET_NAME;
+
+    if (!accountId || !accessKeyId || !secretAccessKey || !bucket) {
+      throw new Error(
+        'Missing R2 configuration. Ensure R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, ' +
+        'R2_SECRET_ACCESS_KEY, and R2_BUCKET_NAME are set in your environment.',
+      );
+    }
+
+    this.bucket = bucket;
     this.client = new S3Client({
       region: 'auto',
-      endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-      },
+      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+      credentials: { accessKeyId, secretAccessKey },
     });
   }
 
@@ -28,7 +39,7 @@ export class R2Service {
     }));
   }
 
-  async getSignedUrl(key: string, ttlSeconds = 900): Promise<string> {
+  async getSignedUrl(key: string, ttlSeconds = DEFAULT_SIGNED_URL_TTL_SECONDS): Promise<string> {
     return getSignedUrl(
       this.client,
       new GetObjectCommand({ Bucket: this.bucket, Key: key }),
