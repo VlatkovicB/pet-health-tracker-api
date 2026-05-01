@@ -21,11 +21,11 @@ export class R2Service {
       throw new Error(`Missing R2 environment variable(s): ${missing.join(', ')}`);
     }
 
-    this.bucket = bucket;
+    this.bucket = bucket!;
     this.client = new S3Client({
       region: 'auto',
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-      credentials: { accessKeyId, secretAccessKey },
+      endpoint: `https://${accountId!}.r2.cloudflarestorage.com`,
+      credentials: { accessKeyId: accessKeyId!, secretAccessKey: secretAccessKey! },
     });
   }
 
