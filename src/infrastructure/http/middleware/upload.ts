@@ -1,43 +1,25 @@
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import crypto from 'crypto';
+import { AppError } from '../../../shared/errors/AppError';
 
-const allowedExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-
-function makeStorage(dir: string) {
-  fs.mkdirSync(dir, { recursive: true });
-  return multer.diskStorage({
-    destination: dir,
-    filename: (_req, file, cb) => {
-      const ext = path.extname(file.originalname).toLowerCase();
-      cb(null, `${crypto.randomUUID()}${ext}`);
-    },
-  });
+export function detectMimeType(buffer: Buffer): string | null {
+  const hex4 = buffer.slice(0, 4).toString('hex');
+  if (hex4.startsWith('ffd8ff')) return 'image/jpeg';
+  if (hex4 === '89504e47') return 'image/png';
+  if (hex4 === '47494638') return 'image/gif';
+  // WebP: RIFF????WEBP
+  if (hex4 === '52494646' && buffer.slice(8, 12).toString('ascii') === 'WEBP') return 'image/webp';
+  return null;
 }
 
-function fileFilter(_req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) {
-  const ext = path.extname(file.originalname).toLowerCase();
-  if (allowedExts.includes(ext)) cb(null, true);
-  else cb(new Error('Only image files are allowed'));
+export function validateImageBuffer(buffer: Buffer): string {
+  const mimeType = detectMimeType(buffer);
+  if (!mimeType) throw new AppError('Unsupported image type. Allowed: jpeg, png, gif, webp', 415);
+  return mimeType;
 }
 
+const memoryStorage = multer.memoryStorage();
 const limits = { fileSize: 10 * 1024 * 1024 };
 
-export const uploadImage = multer({
-  storage: makeStorage(path.join(process.cwd(), 'uploads', 'vet-visits')),
-  fileFilter,
-  limits,
-});
-
-export const uploadPetPhoto = multer({
-  storage: makeStorage(path.join(process.cwd(), 'uploads', 'pets')),
-  fileFilter,
-  limits,
-});
-
-export const uploadNoteImage = multer({
-  storage: makeStorage(path.join(process.cwd(), 'uploads', 'notes')),
-  fileFilter,
-  limits,
-});
+export const uploadImage = multer({ storage: memoryStorage, limits });
+export const uploadPetPhoto = multer({ storage: memoryStorage, limits });
+export const uploadNoteImage = multer({ storage: memoryStorage, limits });
