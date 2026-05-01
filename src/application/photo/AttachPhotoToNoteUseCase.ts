@@ -32,7 +32,6 @@ export class AttachPhotoToNoteUseCase {
   async execute(input: AttachPhotoToNoteInput): Promise<PhotoResponseDto> {
     const note = await this.noteRepo.findById(input.noteId);
     if (!note) throw new NotFoundError('Note');
-    if (note.userId !== input.userId) throw new NotFoundError('Note');
     const pet = await this.petAccessService.assertCanAccess(input.petId, input.userId, 'edit_photos');
     const ext = input.mimeType.split('/')[1] ?? 'jpg';
     const s3Key = `photos/${uuidv4()}.${ext}`;

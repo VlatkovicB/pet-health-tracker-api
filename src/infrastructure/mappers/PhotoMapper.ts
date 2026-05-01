@@ -6,6 +6,7 @@ import { PhotoModel } from '../db/models/PhotoModel';
 export interface PhotoResponseDto {
   id: string;
   petId: string;
+  pet: { id: string; name: string };
   ownerId: string;
   url: string; // pre-signed URL, injected by use case
   takenAt: string;
@@ -47,10 +48,11 @@ export class PhotoMapper {
     };
   }
 
-  toResponse(photo: Photo, signedUrl: string): PhotoResponseDto {
+  toResponse(photo: Photo, signedUrl: string, pet?: { id: string; name: string }): PhotoResponseDto {
     return {
       id: photo.id.toValue(),
       petId: photo.petId,
+      pet: pet ?? { id: photo.petId, name: '' },
       ownerId: photo.ownerId,
       url: signedUrl,
       takenAt: photo.takenAt,
