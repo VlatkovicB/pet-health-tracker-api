@@ -17,7 +17,7 @@ export class PhotoModel extends Model {
   @Column({ type: DataType.UUID, allowNull: false, field: 'owner_id' })
   declare ownerId: string;
 
-  @Column({ type: DataType.STRING, allowNull: false, field: 's3_key' })
+  @Column({ type: DataType.STRING, allowNull: false, unique: true, field: 's3_key' })
   declare s3Key: string;
 
   @Column({ type: DataType.DATEONLY, allowNull: false, field: 'taken_at' })

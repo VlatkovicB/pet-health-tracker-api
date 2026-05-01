@@ -1,14 +1,16 @@
 import { JsonController, Get, Post, Put, Body, Param, QueryParams, UseBefore, CurrentUser, HttpCode, Req } from 'routing-controllers';
 import { Request } from 'express';
 import { Service } from 'typedi';
+import { v4 as uuidv4 } from 'uuid';
 import { AddPetUseCase } from '../../../application/pet/AddPetUseCase';
 import { ListPetsUseCase } from '../../../application/pet/ListPetsUseCase';
 import { GetPetUseCase } from '../../../application/pet/GetPetUseCase';
 import { UpdatePetUseCase } from '../../../application/pet/UpdatePetUseCase';
 import { PetMapper } from '../../mappers/PetMapper';
 import { authMiddleware, AuthPayload } from '../middleware/authMiddleware';
-import { uploadPetPhoto } from '../middleware/upload';
+import { uploadPetPhoto, validateImageBuffer } from '../middleware/upload';
 import { AppError } from '../../../shared/errors/AppError';
+import { R2Service } from '../../storage/R2Service';
 import { Validate } from '../decorators/Validate';
 import {
   CreatePetSchema, CreatePetBody,
@@ -26,6 +28,7 @@ export class PetController {
     private readonly getPet: GetPetUseCase,
     private readonly updatePet: UpdatePetUseCase,
     private readonly mapper: PetMapper,
+    private readonly r2: R2Service,
   ) {}
 
   @Get('/')
@@ -67,7 +70,11 @@ export class PetController {
   @UseBefore(uploadPetPhoto.single('photo'))
   async uploadPhoto(@Param('petId') petId: string, @Req() req: Request, @CurrentUser() user: AuthPayload) {
     if (!req.file) throw new AppError('No file uploaded', 400);
-    const photoUrl = `/uploads/pets/${req.file.filename}`;
+    const mimeType = validateImageBuffer(req.file.buffer);
+    const ext = mimeType.split('/')[1] ?? 'jpg';
+    const s3Key = `pets/${uuidv4()}.${ext}`;
+    await this.r2.upload(s3Key, req.file.buffer, mimeType);
+    const photoUrl = await this.r2.getSignedUrl(s3Key);
     const pet = await this.updatePet.execute({ petId, photoUrl, requestingUserId: user.userId });
     return this.mapper.toResponse(pet);
   }
