@@ -34,7 +34,6 @@ export class UpdateVetVisitUseCase {
         type: existing.type,
         createdBy: existing.createdBy,
         createdAt: existing.createdAt,
-        imageUrls: existing.imageUrls,
         clinic: existing.clinic,
         vetName: existing.vetName,
         vetId: input.vetId !== undefined ? (input.vetId || undefined) : existing.vetId,

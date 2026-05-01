@@ -12,7 +12,6 @@ interface VetVisitProps {
   vetName?: string;
   reason: string;
   notes?: string;
-  imageUrls: string[];
   createdBy: string;
   createdAt: Date;
 }
@@ -26,22 +25,14 @@ export class VetVisit extends Entity<VetVisitProps> {
   get vetName(): string | undefined { return this.props.vetName; }
   get reason(): string { return this.props.reason; }
   get notes(): string | undefined { return this.props.notes; }
-  get imageUrls(): string[] { return this.props.imageUrls; }
   get createdBy(): string { return this.props.createdBy; }
   get createdAt(): Date { return this.props.createdAt; }
 
-  static create(props: Omit<VetVisitProps, 'createdAt' | 'imageUrls'>, id?: UniqueEntityId): VetVisit {
-    return new VetVisit({ ...props, imageUrls: [], createdAt: new Date() }, id);
+  static create(props: Omit<VetVisitProps, 'createdAt'>, id?: UniqueEntityId): VetVisit {
+    return new VetVisit({ ...props, createdAt: new Date() }, id);
   }
 
   static reconstitute(props: VetVisitProps, id: UniqueEntityId): VetVisit {
     return new VetVisit(props, id);
-  }
-
-  static addImage(existing: VetVisit, imageUrl: string): VetVisit {
-    return VetVisit.reconstitute(
-      { ...existing.props, imageUrls: [...existing.imageUrls, imageUrl] },
-      existing.id,
-    );
   }
 }

@@ -25,7 +25,6 @@ function makeNote(): Note {
       title: 'Test note',
       noteDate: '2026-04-15',
       petIds: ['pet-1'],
-      imageUrls: [],
       createdAt: new Date(),
     },
     new UniqueEntityId('note-1'),

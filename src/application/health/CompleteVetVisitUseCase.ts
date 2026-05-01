@@ -38,7 +38,6 @@ export class CompleteVetVisitUseCase {
         vetName: existing.vetName,
         reason: existing.reason,
         notes: input.notes ?? existing.notes,
-        imageUrls: existing.imageUrls,
         createdBy: existing.createdBy,
         createdAt: existing.createdAt,
       },

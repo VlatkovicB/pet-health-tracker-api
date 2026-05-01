@@ -13,7 +13,6 @@ export interface VetVisitResponseDto {
   vetName?: string;
   reason: string;
   notes?: string;
-  imageUrls: string[];
   createdBy: string;
   createdAt: string;
 }
@@ -31,7 +30,6 @@ export class VetVisitMapper {
         vetName: model.vetName ?? undefined,
         reason: model.reason,
         notes: model.notes ?? undefined,
-        imageUrls: model.imageUrls ?? [],
         createdBy: model.createdBy,
         createdAt: model.createdAt,
       },
@@ -50,7 +48,6 @@ export class VetVisitMapper {
       vetName: visit.vetName ?? null,
       reason: visit.reason,
       notes: visit.notes ?? null,
-      imageUrls: visit.imageUrls,
       createdBy: visit.createdBy,
       createdAt: visit.createdAt,
     };
@@ -67,7 +64,6 @@ export class VetVisitMapper {
       vetName: visit.vetName,
       reason: visit.reason,
       notes: visit.notes,
-      imageUrls: visit.imageUrls,
       createdBy: visit.createdBy,
       createdAt: visit.createdAt.toISOString(),
     };

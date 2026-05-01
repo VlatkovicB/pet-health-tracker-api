@@ -5,7 +5,6 @@ export const CreateNoteSchema = z.object({
   description: z.string().optional(),
   noteDate: z.string(),
   petIds: z.array(z.string()).optional(),
-  imageUrls: z.array(z.string()).optional(),
 });
 export type CreateNoteBody = z.infer<typeof CreateNoteSchema>;
 

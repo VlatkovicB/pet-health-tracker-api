@@ -7,7 +7,6 @@ interface NoteProps {
   description?: string;
   noteDate: string; // 'YYYY-MM-DD'
   petIds: string[];
-  imageUrls: string[];
   createdAt: Date;
 }
 
@@ -17,21 +16,13 @@ export class Note extends Entity<NoteProps> {
   get description(): string | undefined { return this.props.description; }
   get noteDate(): string { return this.props.noteDate; }
   get petIds(): string[] { return this.props.petIds; }
-  get imageUrls(): string[] { return this.props.imageUrls; }
   get createdAt(): Date { return this.props.createdAt; }
 
-  static create(props: Omit<NoteProps, 'createdAt' | 'imageUrls'>, id?: UniqueEntityId): Note {
-    return new Note({ ...props, imageUrls: [], createdAt: new Date() }, id);
+  static create(props: Omit<NoteProps, 'createdAt'>, id?: UniqueEntityId): Note {
+    return new Note({ ...props, createdAt: new Date() }, id);
   }
 
   static reconstitute(props: NoteProps, id: UniqueEntityId): Note {
     return new Note(props, id);
-  }
-
-  static addImage(existing: Note, imageUrl: string): Note {
-    return Note.reconstitute(
-      { ...existing.props, imageUrls: [...existing.imageUrls, imageUrl] },
-      existing.id,
-    );
   }
 }

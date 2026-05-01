@@ -22,9 +22,6 @@ export class NoteModel extends Model {
   @Column({ type: DataType.DATEONLY, allowNull: false, field: 'note_date' })
   declare noteDate: string;
 
-  @Column({ type: DataType.JSONB, allowNull: false, defaultValue: [], field: 'image_urls' })
-  declare imageUrls: string[];
-
   @Column({ type: DataType.DATE, allowNull: false, field: 'created_at' })
   declare createdAt: Date;
 

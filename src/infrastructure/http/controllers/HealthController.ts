@@ -1,8 +1,6 @@
-import { JsonController, Get, Post, Put, Patch, Body, Param, QueryParams, UseBefore, CurrentUser, HttpCode, OnUndefined, Req } from 'routing-controllers';
-import { Request } from 'express';
+import { JsonController, Get, Post, Put, Patch, Body, Param, QueryParams, UseBefore, CurrentUser, HttpCode, OnUndefined } from 'routing-controllers';
 import { Inject, Service } from 'typedi';
 import { AddVetVisitUseCase } from '../../../application/health/AddVetVisitUseCase';
-import { AddVetVisitImageUseCase } from '../../../application/health/AddVetVisitImageUseCase';
 import { UpdateVetVisitUseCase } from '../../../application/health/UpdateVetVisitUseCase';
 import { CompleteVetVisitUseCase } from '../../../application/health/CompleteVetVisitUseCase';
 import { ListVetVisitsUseCase } from '../../../application/health/ListVetVisitsUseCase';
@@ -14,9 +12,8 @@ import { ReminderRepository, REMINDER_REPOSITORY } from '../../../domain/reminde
 import { VetVisitMapper } from '../../mappers/VetVisitMapper';
 import { MedicationMapper } from '../../mappers/MedicationMapper';
 import { ReminderMapper } from '../../mappers/ReminderMapper';
-import { NotFoundError, AppError } from '../../../shared/errors/AppError';
+import { NotFoundError } from '../../../shared/errors/AppError';
 import { authMiddleware, AuthPayload } from '../middleware/authMiddleware';
-import { uploadImage } from '../middleware/upload';
 import { Validate } from '../decorators/Validate';
 import {
   CreateVetVisitSchema, CreateVetVisitBody,
@@ -34,7 +31,6 @@ import { PaginationQuerySchema, PaginationQuery, VetVisitsByPetQuerySchema, VetV
 export class HealthController {
   constructor(
     private readonly addVetVisitUseCase: AddVetVisitUseCase,
-    private readonly addVetVisitImageUseCase: AddVetVisitImageUseCase,
     private readonly updateVetVisitUseCase: UpdateVetVisitUseCase,
     private readonly completeVetVisitUseCase: CompleteVetVisitUseCase,
     private readonly listVetVisitsUseCase: ListVetVisitsUseCase,
@@ -103,15 +99,6 @@ export class HealthController {
   @Validate({ body: ConfigureVetVisitReminderSchema })
   async configureVetVisitReminder(@Param('visitId') visitId: string, @Body() body: ConfigureVetVisitReminderBody, @CurrentUser() user: AuthPayload) {
     await this.configureVetVisitReminderUseCase.execute({ visitId, ...body, requestingUserId: user.userId });
-  }
-
-  @Post('/:petId/vet-visits/:visitId/images')
-  @UseBefore(uploadImage.single('image'))
-  async uploadVetVisitImage(@Param('visitId') visitId: string, @Req() req: Request, @CurrentUser() user: AuthPayload) {
-    if (!req.file) throw new AppError('No file uploaded', 400);
-    const imageUrl = `/uploads/vet-visits/${req.file.filename}`;
-    const visit = await this.addVetVisitImageUseCase.execute(visitId, imageUrl, user.userId);
-    return this.vetVisitMapper.toResponse(visit);
   }
 
   @Get('/:petId/medications')

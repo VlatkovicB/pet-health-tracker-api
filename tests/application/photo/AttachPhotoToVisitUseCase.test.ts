@@ -25,7 +25,6 @@ function makeVisit(): VetVisit {
       type: 'logged',
       visitDate: new Date('2026-04-15'),
       reason: 'Checkup',
-      imageUrls: [],
       createdBy: 'user-1',
       createdAt: new Date(),
     },

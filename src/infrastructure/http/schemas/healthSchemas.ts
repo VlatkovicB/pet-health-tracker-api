@@ -21,7 +21,6 @@ export const CreateVetVisitSchema = z.object({
   clinic: z.string().optional(),
   vetName: z.string().optional(),
   scheduleNextVisit: ScheduleNextVisitSchema.optional(),
-  imageUrls: z.array(z.string()).optional(),
 });
 export type CreateVetVisitBody = z.infer<typeof CreateVetVisitSchema>;
 

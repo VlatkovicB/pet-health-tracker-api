@@ -10,7 +10,6 @@ export interface CreateNoteInput {
   description?: string;
   noteDate: string;
   petIds?: string[];
-  imageUrls?: string[];
 }
 
 @Service()

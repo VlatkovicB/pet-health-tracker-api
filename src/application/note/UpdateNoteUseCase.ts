@@ -33,7 +33,6 @@ export class UpdateNoteUseCase {
         description: input.description !== undefined ? input.description : existing.description,
         noteDate: input.noteDate ?? existing.noteDate,
         petIds: input.petIds !== undefined ? input.petIds : existing.petIds,
-        imageUrls: existing.imageUrls,
         createdAt: existing.createdAt,
       },
       new UniqueEntityId(existing.id.toValue()),

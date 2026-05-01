@@ -34,9 +34,6 @@ export class VetVisitModel extends Model {
   @Column({ type: DataType.TEXT, allowNull: true })
   declare notes: string | null;
 
-  @Column({ type: DataType.JSONB, allowNull: false, defaultValue: [], field: 'image_urls' })
-  declare imageUrls: string[];
-
   @Column({ type: DataType.UUID, allowNull: false, field: 'created_by' })
   declare createdBy: string;
 
