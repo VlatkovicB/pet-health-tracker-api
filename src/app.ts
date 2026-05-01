@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 import express from 'express';
 import cors from 'cors';
-import path from 'path';
 import { useExpressServer, useContainer } from 'routing-controllers';
 import { Container } from 'typedi';
 import { errorMiddleware } from './infrastructure/http/middleware/errorMiddleware';
@@ -21,6 +20,7 @@ import { PetShareInboxController } from './infrastructure/http/controllers/PetSh
 import { PetTransferInboxController } from './infrastructure/http/controllers/PetTransferInboxController';
 import { PlacesController } from './infrastructure/http/controllers/PlacesController';
 import { WeightController } from './infrastructure/http/controllers/WeightController';
+import { PhotoController } from './infrastructure/http/controllers/PhotoController';
 
 export function createApp(): express.Application {
   useContainer(Container);
@@ -29,7 +29,6 @@ export function createApp(): express.Application {
 
   app.use(cors({ origin: process.env.CLIENT_ORIGIN ?? 'http://localhost:5173', credentials: true }));
   app.use(express.json());
-  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
   useExpressServer(app, {
     routePrefix: '/api/v1',
@@ -48,6 +47,7 @@ export function createApp(): express.Application {
       PetTransferInboxController,
       PlacesController,
       WeightController,
+      PhotoController,
     ],
     defaultErrorHandler: false,
     currentUserChecker: (action) => action.request.auth,
