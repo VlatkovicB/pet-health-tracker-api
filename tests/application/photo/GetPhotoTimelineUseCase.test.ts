@@ -37,7 +37,7 @@ describe('GetPhotoTimelineUseCase', () => {
     const petRepo: jest.Mocked<PetRepository> = {
       findById: jest.fn(),
       findByIds: jest.fn().mockResolvedValue([pet]),
-      findByUserId: jest.fn().mockResolvedValue([pet]),
+      findByUserId: jest.fn().mockResolvedValue({ items: [pet], total: 1, page: 1, limit: 10000 }),
       save: jest.fn(),
       delete: jest.fn(),
     } as any;

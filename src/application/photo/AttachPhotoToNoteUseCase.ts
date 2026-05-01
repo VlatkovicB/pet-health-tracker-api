@@ -6,7 +6,7 @@ import { PhotoMapper, PhotoResponseDto } from '../../infrastructure/mappers/Phot
 import { PetAccessService } from '../pet/PetAccessService';
 import { R2Service } from '../../infrastructure/storage/R2Service';
 import { NoteRepository, NOTE_REPOSITORY } from '../../domain/note/NoteRepository';
-import { NotFoundError } from '../../shared/errors/AppError';
+import { NotFoundError, ValidationError } from '../../shared/errors/AppError';
 import { UniqueEntityId } from '../../domain/shared/UniqueEntityId';
 
 export interface AttachPhotoToNoteInput {
@@ -32,6 +32,9 @@ export class AttachPhotoToNoteUseCase {
   async execute(input: AttachPhotoToNoteInput): Promise<PhotoResponseDto> {
     const note = await this.noteRepo.findById(input.noteId);
     if (!note) throw new NotFoundError('Note');
+    if (!note.petIds.includes(input.petId)) {
+      throw new ValidationError(`Pet ${input.petId} is not associated with this note`);
+    }
     const pet = await this.petAccessService.assertCanAccess(input.petId, input.userId, 'edit_photos');
     const ext = input.mimeType.split('/')[1] ?? 'jpg';
     const s3Key = `photos/${uuidv4()}.${ext}`;

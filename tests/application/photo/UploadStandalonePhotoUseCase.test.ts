@@ -33,6 +33,7 @@ function makeMapper(): jest.Mocked<PhotoMapper> {
     toResponse: jest.fn((_p: Photo, url: string) => ({
       id: 'photo-1',
       petId: 'pet-1',
+      pet: { id: 'pet-1', name: 'Luna' },
       ownerId: 'user-1',
       url,
       takenAt: '2026-04-30',

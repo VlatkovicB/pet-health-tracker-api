@@ -9,7 +9,7 @@ import { Photo } from '../../../src/domain/photo/Photo';
 import { Pet } from '../../../src/domain/pet/Pet';
 import { Note } from '../../../src/domain/note/Note';
 import { UniqueEntityId } from '../../../src/domain/shared/UniqueEntityId';
-import { ForbiddenError, NotFoundError } from '../../../src/shared/errors/AppError';
+import { ForbiddenError, NotFoundError, ValidationError } from '../../../src/shared/errors/AppError';
 
 function makePet(): Pet {
   return Pet.reconstitute(
@@ -136,6 +136,28 @@ describe('AttachPhotoToNoteUseCase', () => {
     await expect(
       useCase.execute({ userId: 'user-99', noteId: 'note-1', petId: 'pet-1', buffer: Buffer.from('x'), mimeType: 'image/jpeg', takenAt: '2026-04-15' }),
     ).rejects.toThrow(ForbiddenError);
+    expect(r2.upload).not.toHaveBeenCalled();
+  });
+
+  it('throws ValidationError when petId is not associated with the note', async () => {
+    const note = makeNote(); // note.petIds = ['pet-1']
+    const repo = makeRepo();
+    const mapper = makeMapper();
+    const noteRepo: jest.Mocked<NoteRepository> = {
+      save: jest.fn(),
+      findById: jest.fn().mockResolvedValue(note),
+      findByUserId: jest.fn(),
+      delete: jest.fn(),
+    };
+    const petAccess = { assertCanAccess: jest.fn() } as unknown as PetAccessService;
+    const r2 = { upload: jest.fn(), getSignedUrl: jest.fn(), delete: jest.fn() } as unknown as R2Service;
+
+    const useCase = new AttachPhotoToNoteUseCase(repo, noteRepo, petAccess, mapper, r2);
+
+    await expect(
+      useCase.execute({ userId: 'user-1', noteId: 'note-1', petId: 'pet-99', buffer: Buffer.from('x'), mimeType: 'image/jpeg', takenAt: '2026-04-15' }),
+    ).rejects.toThrow(ValidationError);
+    expect(petAccess.assertCanAccess).not.toHaveBeenCalled();
     expect(r2.upload).not.toHaveBeenCalled();
   });
 
