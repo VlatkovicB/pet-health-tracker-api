@@ -32,7 +32,7 @@ describe('GetPhotoYearsUseCase', () => {
     const result = await useCase.execute({ userId: 'user-1' });
 
     expect(result).toEqual([2024, 2025, 2026]);
-    expect(repo.findYearsByOwnerId).toHaveBeenCalledWith('user-1', undefined);
+    expect(repo.findYearsByOwnerId).toHaveBeenCalledWith('user-1', undefined, undefined);
     expect(petAccess.assertCanAccess).not.toHaveBeenCalled();
   });
 
@@ -47,7 +47,7 @@ describe('GetPhotoYearsUseCase', () => {
     expect(petAccess.assertCanAccess).toHaveBeenCalledWith('pet-1', 'user-1', 'view_photos');
     expect(petAccess.assertCanAccess).toHaveBeenCalledWith('pet-2', 'user-1', 'view_photos');
     expect(petAccess.assertCanAccess).toHaveBeenCalledTimes(2);
-    expect(repo.findYearsByOwnerId).toHaveBeenCalledWith('user-1', ['pet-1', 'pet-2']);
+    expect(repo.findYearsByOwnerId).toHaveBeenCalledWith('user-1', ['pet-1', 'pet-2'], undefined);
     expect(result).toEqual([2025, 2026]);
   });
 
@@ -60,5 +60,15 @@ describe('GetPhotoYearsUseCase', () => {
       useCase.execute({ userId: 'user-99', petIds: ['pet-1'] }),
     ).rejects.toThrow(ForbiddenError);
     expect(repo.findYearsByOwnerId).not.toHaveBeenCalled();
+  });
+
+  it('passes sourceTypes to repo when provided', async () => {
+    const repo = makeRepo([2025, 2026]);
+    const petAccess = { assertCanAccess: jest.fn() } as unknown as PetAccessService;
+    const useCase = new GetPhotoYearsUseCase(repo, petAccess);
+
+    await useCase.execute({ userId: 'user-1', sourceTypes: ['standalone', 'vet-visit'] });
+
+    expect(repo.findYearsByOwnerId).toHaveBeenCalledWith('user-1', undefined, ['standalone', 'vet-visit']);
   });
 });

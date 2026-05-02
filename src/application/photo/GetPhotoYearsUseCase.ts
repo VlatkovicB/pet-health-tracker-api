@@ -1,10 +1,12 @@
 import { Inject, Service } from 'typedi';
 import { PhotoRepository, PHOTO_REPOSITORY } from '../../domain/photo/PhotoRepository';
+import { PhotoSourceType } from '../../domain/photo/Photo';
 import { PetAccessService } from '../pet/PetAccessService';
 
 export interface GetPhotoYearsInput {
   userId: string;
   petIds?: string[];
+  sourceTypes?: PhotoSourceType[];
 }
 
 @Service()
@@ -22,6 +24,6 @@ export class GetPhotoYearsUseCase {
         ),
       );
     }
-    return this.repo.findYearsByOwnerId(input.userId, input.petIds);
+    return this.repo.findYearsByOwnerId(input.userId, input.petIds, input.sourceTypes);
   }
 }
