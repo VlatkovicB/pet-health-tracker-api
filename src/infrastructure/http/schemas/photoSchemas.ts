@@ -1,14 +1,20 @@
 import { z } from 'zod';
 
+// Looser than z.string().uuid() — accepts seeded IDs with version digit 0
+const uuidLike = z.string().regex(
+  /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i,
+  'Invalid UUID',
+);
+
 export const UploadPhotoSchema = z.object({
-  petId: z.string().uuid(),
+  petId: uuidLike,
   takenAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'takenAt must be YYYY-MM-DD'),
   caption: z.string().optional(),
 });
 export type UploadPhotoBody = z.infer<typeof UploadPhotoSchema>;
 
 export const AttachPhotoToNoteSchema = z.object({
-  petId: z.string().uuid(),
+  petId: uuidLike,
   takenAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   caption: z.string().optional(),
 });
@@ -23,7 +29,7 @@ export type AttachPhotoToVisitBody = z.infer<typeof AttachPhotoToVisitSchema>;
 export const PhotoTimelineQuerySchema = z.object({
   year: z.string().regex(/^\d{4}$/).transform(Number),
   petIds: z
-    .union([z.string().uuid(), z.array(z.string().uuid())])
+    .union([uuidLike, z.array(uuidLike)])
     .optional()
     .transform((v) => (v ? (Array.isArray(v) ? v : [v]) : undefined)),
 });
@@ -31,7 +37,7 @@ export type PhotoTimelineQuery = z.infer<typeof PhotoTimelineQuerySchema>;
 
 export const PhotoYearsQuerySchema = z.object({
   petIds: z
-    .union([z.string().uuid(), z.array(z.string().uuid())])
+    .union([uuidLike, z.array(uuidLike)])
     .optional()
     .transform((v) => (v ? (Array.isArray(v) ? v : [v]) : undefined)),
 });
