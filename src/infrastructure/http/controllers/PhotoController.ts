@@ -115,13 +115,22 @@ export class PhotoController {
   @Get('/timeline')
   @Validate({ query: PhotoTimelineQuerySchema })
   async timeline(@QueryParams() query: PhotoTimelineQuery, @CurrentUser() user: AuthPayload) {
-    return this.getPhotoTimeline.execute({ userId: user.userId, year: query.year, petIds: query.petIds });
+    return this.getPhotoTimeline.execute({
+      userId: user.userId,
+      year: query.year,
+      petIds: query.petIds,
+      sourceTypes: query.sourceTypes,
+    });
   }
 
   @Get('/years')
   @Validate({ query: PhotoYearsQuerySchema })
   async years(@QueryParams() query: PhotoYearsQuery, @CurrentUser() user: AuthPayload) {
-    return this.getPhotoYears.execute({ userId: user.userId, petIds: query.petIds });
+    return this.getPhotoYears.execute({
+      userId: user.userId,
+      petIds: query.petIds,
+      sourceTypes: query.sourceTypes,
+    });
   }
 
   @Delete('/:photoId')

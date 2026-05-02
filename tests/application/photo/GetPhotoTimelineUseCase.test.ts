@@ -54,7 +54,7 @@ describe('GetPhotoTimelineUseCase', () => {
 
     expect(result['2026']['04']).toHaveLength(2);
     expect(result['2026']['04'][0].url).toBe('https://signed.url/photo.jpg');
-    expect(repo.findByPetIds).toHaveBeenCalledWith(['pet-1'], 2026);
+    expect(repo.findByPetIds).toHaveBeenCalledWith(['pet-1'], 2026, undefined);
     expect(petAccess.assertCanAccess).not.toHaveBeenCalled();
   });
 
@@ -77,7 +77,7 @@ describe('GetPhotoTimelineUseCase', () => {
     const useCase = new GetPhotoTimelineUseCase(repo, petRepo, mapper, petAccess, r2);
     await useCase.execute({ userId: 'user-1', year: 2026, petIds: ['pet-2'] });
 
-    expect(repo.findByPetIds).toHaveBeenCalledWith(['pet-2'], 2026);
+    expect(repo.findByPetIds).toHaveBeenCalledWith(['pet-2'], 2026, undefined);
     expect(petRepo.findByUserId).not.toHaveBeenCalled();
     expect(petAccess.assertCanAccess).toHaveBeenCalledWith('pet-2', 'user-1', 'view_photos');
   });
@@ -98,5 +98,27 @@ describe('GetPhotoTimelineUseCase', () => {
 
     await expect(useCase.execute({ userId: 'user-99', year: 2026, petIds: ['pet-1'] })).rejects.toThrow(ForbiddenError);
     expect(repo.findByPetIds).not.toHaveBeenCalled();
+  });
+
+  it('passes sourceTypes to repo when provided', async () => {
+    const pet = makePet();
+    const repo: jest.Mocked<PhotoRepository> = {
+      save: jest.fn(), findById: jest.fn(),
+      findByPetIds: jest.fn().mockResolvedValue([]),
+      findYearsByOwnerId: jest.fn(), delete: jest.fn(),
+    };
+    const petRepo: jest.Mocked<PetRepository> = {
+      findByUserId: jest.fn().mockResolvedValue({ items: [pet], total: 1, page: 1, limit: 10000 }),
+      findById: jest.fn(), findByIds: jest.fn().mockResolvedValue([]),
+      save: jest.fn(), delete: jest.fn(),
+    } as any;
+    const petAccess = { assertCanAccess: jest.fn() } as unknown as PetAccessService;
+    const r2 = { getSignedUrl: jest.fn(), upload: jest.fn(), delete: jest.fn() } as unknown as R2Service;
+    const mapper = { toDomain: jest.fn(), toPersistence: jest.fn(), toResponse: jest.fn() } as any;
+
+    const useCase = new GetPhotoTimelineUseCase(repo, petRepo, mapper, petAccess, r2);
+    await useCase.execute({ userId: 'user-1', year: 2026, sourceTypes: ['vet-visit', 'note'] });
+
+    expect(repo.findByPetIds).toHaveBeenCalledWith(['pet-1'], 2026, ['vet-visit', 'note']);
   });
 });
