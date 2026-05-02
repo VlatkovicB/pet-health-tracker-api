@@ -6,6 +6,8 @@ const uuidLike = z.string().regex(
   'Invalid UUID',
 );
 
+const photoSourceTypeEnum = z.enum(['standalone', 'vet-visit', 'note', 'weight-entry']);
+
 export const UploadPhotoSchema = z.object({
   petId: uuidLike,
   takenAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'takenAt must be YYYY-MM-DD'),
@@ -32,12 +34,20 @@ export const PhotoTimelineQuerySchema = z.object({
     .union([uuidLike, z.array(uuidLike)])
     .optional()
     .transform((v) => (v ? (Array.isArray(v) ? v : [v]) : undefined)),
+  sourceTypes: z
+    .union([photoSourceTypeEnum, z.array(photoSourceTypeEnum)])
+    .optional()
+    .transform((v) => (v ? (Array.isArray(v) ? v : [v]) : undefined)),
 });
 export type PhotoTimelineQuery = z.infer<typeof PhotoTimelineQuerySchema>;
 
 export const PhotoYearsQuerySchema = z.object({
   petIds: z
     .union([uuidLike, z.array(uuidLike)])
+    .optional()
+    .transform((v) => (v ? (Array.isArray(v) ? v : [v]) : undefined)),
+  sourceTypes: z
+    .union([photoSourceTypeEnum, z.array(photoSourceTypeEnum)])
     .optional()
     .transform((v) => (v ? (Array.isArray(v) ? v : [v]) : undefined)),
 });
