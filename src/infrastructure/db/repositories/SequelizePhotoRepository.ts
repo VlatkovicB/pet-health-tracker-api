@@ -28,7 +28,7 @@ export class SequelizePhotoRepository implements PhotoRepository {
       petId: { [Op.in]: petIds },
       takenAt: { [Op.between]: [start, end] },
     };
-    if (sourceTypes?.length) where.sourceType = { [Op.in]: sourceTypes };
+    if (sourceTypes !== undefined) where.sourceType = { [Op.in]: sourceTypes };
     const models = await PhotoModel.findAll({
       where,
       order: [['taken_at', 'DESC']],
@@ -39,7 +39,7 @@ export class SequelizePhotoRepository implements PhotoRepository {
   async findYearsByOwnerId(ownerId: string, petIds?: string[], sourceTypes?: PhotoSourceType[]): Promise<number[]> {
     const where: any = { ownerId };
     if (petIds?.length) where.petId = { [Op.in]: petIds };
-    if (sourceTypes?.length) where.sourceType = { [Op.in]: sourceTypes };
+    if (sourceTypes !== undefined) where.sourceType = { [Op.in]: sourceTypes };
     const models = await PhotoModel.findAll({
       attributes: [[PhotoModel.sequelize!.fn('DISTINCT', PhotoModel.sequelize!.fn('date_part', 'year', PhotoModel.sequelize!.col('taken_at'))), 'year']],
       where,
