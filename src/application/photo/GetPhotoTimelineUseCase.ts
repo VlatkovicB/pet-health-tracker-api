@@ -1,5 +1,6 @@
 import { Inject, Service } from 'typedi';
 import { PhotoRepository, PHOTO_REPOSITORY } from '../../domain/photo/PhotoRepository';
+import { PhotoSourceType } from '../../domain/photo/Photo';
 import { PetRepository, PET_REPOSITORY } from '../../domain/pet/PetRepository';
 import { PhotoMapper, PhotoResponseDto } from '../../infrastructure/mappers/PhotoMapper';
 import { PetAccessService } from '../pet/PetAccessService';
@@ -9,6 +10,7 @@ export interface GetPhotoTimelineInput {
   userId: string;
   year: number;
   petIds?: string[];
+  sourceTypes?: PhotoSourceType[];
 }
 
 export type PhotoTimeline = Record<string, Record<string, PhotoResponseDto[]>>;
@@ -35,13 +37,11 @@ export class GetPhotoTimelineUseCase {
       petIds = input.petIds;
     } else {
       const result = await this.petRepo.findByUserId(input.userId, { page: 1, limit: 10000 });
-      const pets = result.items;
-      petIds = pets.map((p) => p.id.toValue());
+      petIds = result.items.map((p) => p.id.toValue());
     }
 
-    const photos = await this.repo.findByPetIds(petIds, input.year);
+    const photos = await this.repo.findByPetIds(petIds, input.year, input.sourceTypes);
 
-    // Build pet map for hydration
     const uniquePetIds = [...new Set(photos.map((p) => p.petId))];
     const petsForPhotos = await this.petRepo.findByIds(uniquePetIds);
     const petMap = new Map(petsForPhotos.map((p) => [p.id.toValue(), { id: p.id.toValue(), name: p.name }]));
