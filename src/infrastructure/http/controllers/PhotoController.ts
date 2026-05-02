@@ -29,6 +29,7 @@ import {
 import { UploadStandalonePhotoUseCase } from '../../../application/photo/UploadStandalonePhotoUseCase';
 import { AttachPhotoToVisitUseCase } from '../../../application/photo/AttachPhotoToVisitUseCase';
 import { AttachPhotoToNoteUseCase } from '../../../application/photo/AttachPhotoToNoteUseCase';
+import { AttachPhotoToWeightEntryUseCase } from '../../../application/photo/AttachPhotoToWeightEntryUseCase';
 import { GetPhotoTimelineUseCase } from '../../../application/photo/GetPhotoTimelineUseCase';
 import { GetPhotoYearsUseCase } from '../../../application/photo/GetPhotoYearsUseCase';
 import { DeletePhotoUseCase } from '../../../application/photo/DeletePhotoUseCase';
@@ -41,6 +42,7 @@ export class PhotoController {
     private readonly uploadStandalonePhoto: UploadStandalonePhotoUseCase,
     private readonly attachPhotoToVisit: AttachPhotoToVisitUseCase,
     private readonly attachPhotoToNote: AttachPhotoToNoteUseCase,
+    private readonly attachWeightEntryPhoto: AttachPhotoToWeightEntryUseCase,
     private readonly getPhotoTimeline: GetPhotoTimelineUseCase,
     private readonly getPhotoYears: GetPhotoYearsUseCase,
     private readonly deletePhoto: DeletePhotoUseCase,
@@ -92,6 +94,22 @@ export class PhotoController {
     const buffer = req.file.buffer;
     const mimeType = validateImageBuffer(buffer);
     return this.attachPhotoToNote.execute({ userId: user.userId, noteId, petId, buffer, mimeType, takenAt, caption });
+  }
+
+  @Post('/weight-entries/:entryId')
+  @HttpCode(201)
+  @UseBefore(uploadImage.single('file'))
+  async attachToWeightEntry(@Param('entryId') entryId: string, @Req() req: Request, @CurrentUser() user: AuthPayload) {
+    if (!req.file) throw new AppError('No file uploaded', 400);
+    const result = AttachPhotoToVisitSchema.safeParse(req.body);
+    if (!result.success) {
+      const msg = result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
+      throw new AppError(msg, 400);
+    }
+    const { takenAt, caption } = result.data;
+    const buffer = req.file.buffer;
+    const mimeType = validateImageBuffer(buffer);
+    return this.attachWeightEntryPhoto.execute({ userId: user.userId, weightEntryId: entryId, buffer, mimeType, takenAt, caption });
   }
 
   @Get('/timeline')

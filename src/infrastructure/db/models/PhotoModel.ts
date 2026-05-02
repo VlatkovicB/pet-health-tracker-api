@@ -26,7 +26,7 @@ export class PhotoModel extends Model {
   @Column({ type: DataType.TEXT, allowNull: true })
   declare caption: string | null;
 
-  @Column({ type: DataType.ENUM('standalone', 'vet-visit', 'note'), allowNull: false, field: 'source_type' })
+  @Column({ type: DataType.ENUM('standalone', 'vet-visit', 'note', 'weight-entry'), allowNull: false, field: 'source_type' })
   declare sourceType: PhotoSourceType;
 
   @Column({ type: DataType.UUID, allowNull: true, field: 'source_id' })

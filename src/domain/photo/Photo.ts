@@ -1,7 +1,7 @@
 import { Entity } from '../shared/Entity';
 import { UniqueEntityId } from '../shared/UniqueEntityId';
 
-export type PhotoSourceType = 'standalone' | 'vet-visit' | 'note';
+export type PhotoSourceType = 'standalone' | 'vet-visit' | 'note' | 'weight-entry';
 
 interface PhotoProps {
   petId: string;
