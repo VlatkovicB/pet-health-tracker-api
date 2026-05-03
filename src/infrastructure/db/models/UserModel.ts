@@ -19,6 +19,9 @@ export class UserModel extends Model {
   @Column({ type: DataType.ENUM('light', 'dark'), allowNull: false, defaultValue: 'light' })
   declare theme: 'light' | 'dark';
 
+  @Column({ type: DataType.ENUM('user', 'admin'), allowNull: false, defaultValue: 'user' })
+  declare role: 'user' | 'admin';
+
   @Column({ type: DataType.DATE, allowNull: false, field: 'created_at' })
   declare createdAt: Date;
 

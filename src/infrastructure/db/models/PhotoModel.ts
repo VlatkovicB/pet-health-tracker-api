@@ -32,6 +32,9 @@ export class PhotoModel extends Model {
   @Column({ type: DataType.UUID, allowNull: true, field: 'source_id' })
   declare sourceId: string | null;
 
+  @Column({ type: DataType.INTEGER, allowNull: false, defaultValue: 0, field: 'size_bytes' })
+  declare sizeBytes: number;
+
   @Column({ type: DataType.DATE, allowNull: false, field: 'created_at' })
   declare createdAt: Date;
 
