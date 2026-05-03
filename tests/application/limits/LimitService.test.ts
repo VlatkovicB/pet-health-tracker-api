@@ -72,7 +72,7 @@ describe('LimitService', () => {
 
     it('throws ForbiddenError when at per-user limit', async () => {
       const svc = makeService(makeLimitsRow({ maxPets: 5 }), { pets: 5 });
-      await expect(svc.checkPetLimit('u1')).rejects.toThrow(ForbiddenError);
+      await expect(svc.checkPetLimit('u1')).rejects.toThrow('Pet limit reached (5/5)');
     });
 
     it('falls back to env default when no per-user override', async () => {
@@ -83,6 +83,27 @@ describe('LimitService', () => {
     it('allows when no limit configured and no env default', async () => {
       const svc = makeService(null, { pets: 9999 });
       await expect(svc.checkPetLimit('u1')).resolves.not.toThrow();
+    });
+  });
+
+  describe('checkVetLimit', () => {
+    it('throws ForbiddenError when at per-user limit', async () => {
+      const svc = makeService(makeLimitsRow({ maxVets: 3 }), { vets: 3 });
+      await expect(svc.checkVetLimit('u1')).rejects.toThrow('Vet limit reached (3/3)');
+    });
+  });
+
+  describe('checkMedicationLimit', () => {
+    it('throws ForbiddenError when at per-user limit', async () => {
+      const svc = makeService(makeLimitsRow({ maxMedications: 10 }), { medications: 10 });
+      await expect(svc.checkMedicationLimit('u1')).rejects.toThrow('Medication limit reached (10/10)');
+    });
+  });
+
+  describe('checkNoteLimit', () => {
+    it('throws ForbiddenError when at per-user limit', async () => {
+      const svc = makeService(makeLimitsRow({ maxNotes: 20 }), { notes: 20 });
+      await expect(svc.checkNoteLimit('u1')).rejects.toThrow('Note limit reached (20/20)');
     });
   });
 
