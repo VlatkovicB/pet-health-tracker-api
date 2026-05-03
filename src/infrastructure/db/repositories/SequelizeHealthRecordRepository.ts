@@ -119,4 +119,10 @@ export class SequelizeHealthRecordRepository implements HealthRecordRepository {
   async saveMedication(medication: Medication): Promise<void> {
     await MedicationModel.upsert(this.medicationMapper.toPersistence(medication) as any);
   }
+
+  async countMedicationsByUserId(userId: string): Promise<number> {
+    return MedicationModel.count({
+      include: [{ model: PetModel, where: { userId }, required: true }],
+    });
+  }
 }

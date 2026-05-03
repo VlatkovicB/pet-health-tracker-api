@@ -5,6 +5,7 @@ export interface VetRepository {
   findById(id: string): Promise<Vet | null>;
   findByUserId(userId: string, pagination: PaginationParams): Promise<PaginatedResult<Vet>>;
   save(vet: Vet): Promise<void>;
+  countByUserId(userId: string): Promise<number>;
 }
 
 export const VET_REPOSITORY = 'VetRepository';

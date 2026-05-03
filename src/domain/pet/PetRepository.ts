@@ -7,6 +7,7 @@ export interface PetRepository {
   findByUserId(userId: string, pagination: PaginationParams): Promise<PaginatedResult<Pet>>;
   save(pet: Pet): Promise<void>;
   delete(id: string): Promise<void>;
+  countByUserId(userId: string): Promise<number>;
 }
 
 export const PET_REPOSITORY = 'PetRepository';

@@ -10,4 +10,5 @@ export interface NoteRepository {
     filters?: { petId?: string; from?: string; to?: string },
   ): Promise<Note[]>;
   delete(id: string): Promise<void>;
+  countByUserId(userId: string): Promise<number>;
 }

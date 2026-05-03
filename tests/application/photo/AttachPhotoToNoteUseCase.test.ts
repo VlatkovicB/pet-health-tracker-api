@@ -71,6 +71,7 @@ describe('AttachPhotoToNoteUseCase', () => {
       findById: jest.fn().mockResolvedValue(note),
       findByUserId: jest.fn(),
       delete: jest.fn(),
+      countByUserId: jest.fn(),
     };
     const petAccess = { assertCanAccess: jest.fn().mockResolvedValue(pet) } as unknown as PetAccessService;
     const r2 = {
@@ -105,6 +106,7 @@ describe('AttachPhotoToNoteUseCase', () => {
       findById: jest.fn().mockResolvedValue(null),
       findByUserId: jest.fn(),
       delete: jest.fn(),
+      countByUserId: jest.fn(),
     };
     const petAccess = { assertCanAccess: jest.fn() } as unknown as PetAccessService;
     const r2 = { upload: jest.fn(), getSignedUrl: jest.fn(), delete: jest.fn() } as unknown as R2Service;
@@ -126,6 +128,7 @@ describe('AttachPhotoToNoteUseCase', () => {
       findById: jest.fn().mockResolvedValue(note),
       findByUserId: jest.fn(),
       delete: jest.fn(),
+      countByUserId: jest.fn(),
     };
     const petAccess = { assertCanAccess: jest.fn().mockRejectedValue(new ForbiddenError()) } as unknown as PetAccessService;
     const r2 = { upload: jest.fn(), getSignedUrl: jest.fn(), delete: jest.fn() } as unknown as R2Service;
@@ -147,6 +150,7 @@ describe('AttachPhotoToNoteUseCase', () => {
       findById: jest.fn().mockResolvedValue(note),
       findByUserId: jest.fn(),
       delete: jest.fn(),
+      countByUserId: jest.fn(),
     };
     const petAccess = { assertCanAccess: jest.fn() } as unknown as PetAccessService;
     const r2 = { upload: jest.fn(), getSignedUrl: jest.fn(), delete: jest.fn() } as unknown as R2Service;
@@ -170,6 +174,7 @@ describe('AttachPhotoToNoteUseCase', () => {
       findById: jest.fn().mockResolvedValue(note),
       findByUserId: jest.fn(),
       delete: jest.fn(),
+      countByUserId: jest.fn(),
     };
     const petAccess = { assertCanAccess: jest.fn().mockResolvedValue(pet) } as unknown as PetAccessService;
     const r2 = {

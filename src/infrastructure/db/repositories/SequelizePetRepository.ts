@@ -41,4 +41,8 @@ export class SequelizePetRepository implements PetRepository {
   async delete(id: string): Promise<void> {
     await PetModel.destroy({ where: { id } });
   }
+
+  async countByUserId(userId: string): Promise<number> {
+    return PetModel.count({ where: { userId } });
+  }
 }

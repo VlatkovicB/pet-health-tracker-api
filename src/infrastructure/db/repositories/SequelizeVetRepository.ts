@@ -40,4 +40,8 @@ export class SequelizeVetRepository implements VetRepository {
       );
     }
   }
+
+  async countByUserId(userId: string): Promise<number> {
+    return VetModel.count({ where: { userId } });
+  }
 }

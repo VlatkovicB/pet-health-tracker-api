@@ -64,4 +64,8 @@ export class SequelizeNoteRepository implements NoteRepository {
       await NoteModel.destroy({ where: { id }, transaction: t });
     });
   }
+
+  async countByUserId(userId: string): Promise<number> {
+    return NoteModel.count({ where: { userId } });
+  }
 }

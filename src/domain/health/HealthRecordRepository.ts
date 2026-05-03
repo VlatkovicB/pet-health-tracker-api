@@ -23,6 +23,7 @@ export interface HealthRecordRepository {
   findMedicationsByPetId(petId: string): Promise<MedicationSummary[]>;
   findActiveMedications(): Promise<Medication[]>;
   saveMedication(medication: Medication): Promise<void>;
+  countMedicationsByUserId(userId: string): Promise<number>;
 }
 
 export const HEALTH_RECORD_REPOSITORY = 'HealthRecordRepository';
