@@ -1,10 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { UnauthorizedError } from '../../../shared/errors/AppError';
+import { UserRole } from '../../../domain/user/UserRole';
 
 export interface AuthPayload {
   userId: string;
   email: string;
+  role: UserRole;
 }
 
 declare global {

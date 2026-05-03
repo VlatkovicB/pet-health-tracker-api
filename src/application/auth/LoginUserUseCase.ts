@@ -21,7 +21,7 @@ export class LoginUserUseCase {
     if (!valid) throw new UnauthorizedError('Invalid credentials');
 
     const token = jwt.sign(
-      { userId: user.id.toValue(), email: user.email },
+      { userId: user.id.toValue(), email: user.email, role: user.role },
       process.env.JWT_SECRET!,
       { expiresIn: (process.env.JWT_EXPIRES_IN ?? '7d') as any },
     );
