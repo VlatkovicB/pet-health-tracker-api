@@ -56,7 +56,10 @@ export class SequelizeUserLimitsRepository implements UserLimitsRepository {
   }
 
   async decrementStorage(userId: string, bytes: number): Promise<void> {
-    await UserLimitsModel.decrement('storageUsedBytes', { by: bytes, where: { userId } });
+    await UserLimitsModel.update(
+      { storageUsedBytes: sequelize.literal(`GREATEST(storage_used_bytes - ${bytes}, 0)`) } as any,
+      { where: { userId } },
+    );
   }
 
   async checkAndIncrementPlacesSearch(userId: string, effectiveLimit: number): Promise<void> {
