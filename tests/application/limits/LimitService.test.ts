@@ -109,6 +109,9 @@ describe('LimitService', () => {
       expect(result.pets).toEqual({ used: 3, max: 5 });
       expect(result.vets).toEqual({ used: 1, max: 20 });
       expect(result.storage).toEqual({ usedBytes: 1000, maxBytes: 104857600 });
+      expect(result.medications).toEqual({ used: 0, max: null });
+      expect(result.notes).toEqual({ used: 2, max: null });
+      expect(result.placesSearches).toEqual({ usedThisMonth: 0, max: null });
     });
   });
 });
