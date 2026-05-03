@@ -27,6 +27,8 @@ export class UserLimits extends Entity<UserLimitsProps> {
   get maxPlacesSearchesMonthly(): number | null { return this.props.maxPlacesSearchesMonthly; }
   get placesSearchesThisMonth(): number { return this.props.placesSearchesThisMonth; }
   get placesSearchesMonth(): Date { return this.props.placesSearchesMonth; }
+  get createdAt(): Date { return this.props.createdAt; }
+  get updatedAt(): Date { return this.props.updatedAt; }
 
   static create(userId: string): UserLimits {
     return new UserLimits({
