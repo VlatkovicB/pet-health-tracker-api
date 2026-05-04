@@ -2,6 +2,7 @@ import { Inject, Service } from 'typedi';
 import { HealthRecordRepository, HEALTH_RECORD_REPOSITORY } from '../../domain/health/HealthRecordRepository';
 import { ReminderRepository, REMINDER_REPOSITORY } from '../../domain/reminder/ReminderRepository';
 import { PetAccessService } from '../pet/PetAccessService';
+import { LimitService } from '../limits/LimitService';
 import { Medication } from '../../domain/health/Medication';
 import { Dosage } from '../../domain/health/value-objects/Dosage';
 import { ReminderSchedule, ReminderScheduleProps } from '../../domain/health/value-objects/ReminderSchedule';
@@ -29,6 +30,7 @@ export class LogMedicationUseCase {
     private readonly petAccessService: PetAccessService,
     @Inject(REMINDER_REPOSITORY) private readonly reminderRepo: ReminderRepository,
     private readonly reminderScheduler: ReminderSchedulerService,
+    private readonly limitService: LimitService,
   ) {}
 
   async execute(input: LogMedicationInput): Promise<Medication> {
@@ -39,6 +41,7 @@ export class LogMedicationUseCase {
     if (!input.startDate) throw new ValidationError('Start date is required');
 
     const pet = await this.petAccessService.assertCanAccess(input.petId, input.requestingUserId, 'edit_medications');
+    await this.limitService.checkMedicationLimit(input.requestingUserId);
 
     const schedule = ReminderSchedule.create(input.schedule);
 

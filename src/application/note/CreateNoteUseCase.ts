@@ -3,6 +3,7 @@ import { NoteRepository, NOTE_REPOSITORY } from '../../domain/note/NoteRepositor
 import { Note } from '../../domain/note/Note';
 import { NoteMapper, NoteResponseDto } from '../../infrastructure/mappers/NoteMapper';
 import { PetAccessService } from '../pet/PetAccessService';
+import { LimitService } from '../limits/LimitService';
 
 export interface CreateNoteInput {
   userId: string;
@@ -18,9 +19,12 @@ export class CreateNoteUseCase {
     @Inject(NOTE_REPOSITORY) private readonly noteRepository: NoteRepository,
     private readonly noteMapper: NoteMapper,
     private readonly petAccessService: PetAccessService,
+    private readonly limitService: LimitService,
   ) {}
 
   async execute(input: CreateNoteInput): Promise<NoteResponseDto> {
+    await this.limitService.checkNoteLimit(input.userId);
+
     for (const petId of input.petIds ?? []) {
       await this.petAccessService.assertCanAccess(petId, input.userId, 'edit_notes');
     }
