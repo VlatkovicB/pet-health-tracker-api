@@ -11,7 +11,7 @@ export class ReminderNotifyUserModel extends Model {
 
   @PrimaryKey
   @ForeignKey(() => UserModel)
-  @Column({ type: DataType.UUID, field: 'user_id' })
+  @Column({ type: DataType.UUID, field: 'user_id', onDelete: 'CASCADE' })
   declare userId: string;
 
   @BelongsTo(() => ReminderModel)

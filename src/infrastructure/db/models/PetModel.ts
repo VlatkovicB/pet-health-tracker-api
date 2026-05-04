@@ -29,7 +29,7 @@ export class PetModel extends Model {
   declare color: string | null;
 
   @ForeignKey(() => UserModel)
-  @Column({ type: DataType.UUID, allowNull: false, field: 'user_id' })
+  @Column({ type: DataType.UUID, allowNull: false, field: 'user_id', onDelete: 'CASCADE' })
   declare userId: string;
 
   @Column({ type: DataType.DATE, allowNull: false, field: 'created_at' })

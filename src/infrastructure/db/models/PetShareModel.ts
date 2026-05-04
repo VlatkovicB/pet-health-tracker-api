@@ -21,11 +21,11 @@ export class PetShareModel extends Model {
   declare petId: string;
 
   @ForeignKey(() => UserModel)
-  @Column({ type: DataType.UUID, allowNull: false, field: 'owner_id' })
+  @Column({ type: DataType.UUID, allowNull: false, field: 'owner_id', onDelete: 'CASCADE' })
   declare ownerId: string;
 
   @ForeignKey(() => UserModel)
-  @Column({ type: DataType.UUID, allowNull: true, field: 'shared_with_user_id' })
+  @Column({ type: DataType.UUID, allowNull: true, field: 'shared_with_user_id', onDelete: 'SET NULL' })
   declare sharedWithUserId: string | null;
 
   @Column({ type: DataType.STRING, allowNull: false, field: 'invited_email' })

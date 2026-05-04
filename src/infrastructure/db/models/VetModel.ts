@@ -9,7 +9,7 @@ export class VetModel extends Model {
   declare id: string;
 
   @ForeignKey(() => UserModel)
-  @Column({ type: DataType.UUID, allowNull: false, field: 'user_id' })
+  @Column({ type: DataType.UUID, allowNull: false, field: 'user_id', onDelete: 'CASCADE' })
   declare userId: string;
 
   @Column({ type: DataType.STRING, allowNull: false })

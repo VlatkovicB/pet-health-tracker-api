@@ -14,7 +14,7 @@ export class PhotoModel extends Model {
   declare petId: string;
 
   @ForeignKey(() => UserModel)
-  @Column({ type: DataType.UUID, allowNull: false, field: 'owner_id' })
+  @Column({ type: DataType.UUID, allowNull: false, field: 'owner_id', onDelete: 'CASCADE' })
   declare ownerId: string;
 
   @Column({ type: DataType.STRING, allowNull: false, unique: true, field: 's3_key' })

@@ -21,11 +21,11 @@ export class PetOwnershipTransferModel extends Model {
   declare petId: string;
 
   @ForeignKey(() => UserModel)
-  @Column({ type: DataType.UUID, allowNull: false, field: 'from_user_id' })
+  @Column({ type: DataType.UUID, allowNull: false, field: 'from_user_id', onDelete: 'CASCADE' })
   declare fromUserId: string;
 
   @ForeignKey(() => UserModel)
-  @Column({ type: DataType.UUID, allowNull: true, field: 'to_user_id' })
+  @Column({ type: DataType.UUID, allowNull: true, field: 'to_user_id', onDelete: 'SET NULL' })
   declare toUserId: string | null;
 
   @Column({ type: DataType.STRING, allowNull: false, field: 'invited_email' })
