@@ -21,6 +21,7 @@ import { PetTransferInboxController } from './infrastructure/http/controllers/Pe
 import { PlacesController } from './infrastructure/http/controllers/PlacesController';
 import { WeightController } from './infrastructure/http/controllers/WeightController';
 import { PhotoController } from './infrastructure/http/controllers/PhotoController';
+import { AdminController } from './infrastructure/http/controllers/AdminController';
 
 export function createApp(): express.Application {
   useContainer(Container);
@@ -48,6 +49,7 @@ export function createApp(): express.Application {
       PlacesController,
       WeightController,
       PhotoController,
+      AdminController,
     ],
     defaultErrorHandler: false,
     currentUserChecker: (action) => action.request.auth,

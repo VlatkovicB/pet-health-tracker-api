@@ -9,6 +9,8 @@ import { SequelizePetShareRepository } from './infrastructure/db/repositories/Se
 import { SequelizePetOwnershipTransferRepository } from './infrastructure/db/repositories/SequelizePetOwnershipTransferRepository';
 import { SequelizeWeightEntryRepository } from './infrastructure/db/repositories/SequelizeWeightEntryRepository';
 import { SequelizePhotoRepository } from './infrastructure/db/repositories/SequelizePhotoRepository';
+import { SequelizeUserLimitsRepository } from './infrastructure/db/repositories/SequelizeUserLimitsRepository';
+import { SequelizeAdminStatsRepository } from './infrastructure/db/repositories/SequelizeAdminStatsRepository';
 import { NOTE_REPOSITORY } from './domain/note/NoteRepository';
 import { PET_SHARE_REPOSITORY } from './domain/share/PetShareRepository';
 import { PET_OWNERSHIP_TRANSFER_REPOSITORY } from './domain/transfer/PetOwnershipTransferRepository';
@@ -19,6 +21,8 @@ import { VET_REPOSITORY } from './domain/vet/VetRepository';
 import { REMINDER_REPOSITORY } from './domain/reminder/ReminderRepository';
 import { WEIGHT_ENTRY_REPOSITORY } from './domain/weight/WeightEntryRepository';
 import { PHOTO_REPOSITORY } from './domain/photo/PhotoRepository';
+import { USER_LIMITS_REPOSITORY } from './domain/user/UserLimitsRepository';
+import { ADMIN_STATS_REPOSITORY } from './domain/admin/AdminStatsRepository';
 
 export function registerDependencies(): void {
   Container.set(USER_REPOSITORY, Container.get(SequelizeUserRepository));
@@ -31,4 +35,6 @@ export function registerDependencies(): void {
   Container.set(PET_OWNERSHIP_TRANSFER_REPOSITORY, Container.get(SequelizePetOwnershipTransferRepository));
   Container.set(WEIGHT_ENTRY_REPOSITORY, Container.get(SequelizeWeightEntryRepository));
   Container.set(PHOTO_REPOSITORY, Container.get(SequelizePhotoRepository));
+  Container.set(USER_LIMITS_REPOSITORY, Container.get(SequelizeUserLimitsRepository));
+  Container.set(ADMIN_STATS_REPOSITORY, Container.get(SequelizeAdminStatsRepository));
 }
