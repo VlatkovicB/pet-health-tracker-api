@@ -8,7 +8,7 @@ export class UserLimitsModel extends Model {
   declare id: string;
 
   @ForeignKey(() => UserModel)
-  @Column({ type: DataType.UUID, allowNull: false, unique: true, field: 'user_id' })
+  @Column({ type: DataType.UUID, allowNull: false, unique: true, field: 'user_id', onDelete: 'CASCADE' })
   declare userId: string;
 
   @Column({ type: DataType.INTEGER, allowNull: true, field: 'max_pets' })
