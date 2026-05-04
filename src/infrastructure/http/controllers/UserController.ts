@@ -6,6 +6,7 @@ import { NotFoundError } from '../../../shared/errors/AppError';
 import { authMiddleware, AuthPayload } from '../middleware/authMiddleware';
 import { Validate } from '../decorators/Validate';
 import { UpdateThemeSchema, UpdateThemeBody } from '../schemas/userSchemas';
+import { LimitService } from '../../../application/limits/LimitService';
 
 @JsonController('/users')
 @Service()
@@ -14,7 +15,13 @@ export class UserController {
   constructor(
     @Inject(USER_REPOSITORY) private readonly userRepo: UserRepository,
     private readonly userMapper: UserMapper,
+    private readonly limitService: LimitService,
   ) {}
+
+  @Get('/me/limits')
+  async getMyLimits(@CurrentUser() user: AuthPayload) {
+    return this.limitService.getLimitsWithUsage(user.userId);
+  }
 
   @Get('/me')
   async getMe(@CurrentUser() user: AuthPayload) {
