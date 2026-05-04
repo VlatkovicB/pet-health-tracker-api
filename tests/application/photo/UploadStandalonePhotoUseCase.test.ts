@@ -8,6 +8,15 @@ import { R2Service } from '../../../src/infrastructure/storage/R2Service';
 import { Pet } from '../../../src/domain/pet/Pet';
 import { UniqueEntityId } from '../../../src/domain/shared/UniqueEntityId';
 import { ForbiddenError } from '../../../src/shared/errors/AppError';
+import { LimitService } from '../../../src/application/limits/LimitService';
+
+function makeLimitService(): jest.Mocked<LimitService> {
+  return {
+    checkStorageLimit: jest.fn().mockResolvedValue(undefined),
+    incrementStorage: jest.fn().mockResolvedValue(undefined),
+    decrementStorage: jest.fn().mockResolvedValue(undefined),
+  } as unknown as jest.Mocked<LimitService>;
+}
 
 function makePet(): Pet {
   return Pet.reconstitute(
@@ -51,7 +60,7 @@ describe('UploadStandalonePhotoUseCase', () => {
     const mapper = makeMapper();
     const petAccess = { assertCanAccess: jest.fn().mockResolvedValue(makePet()) } as unknown as PetAccessService;
     const r2 = { upload: jest.fn().mockResolvedValue(undefined), getSignedUrl: jest.fn().mockResolvedValue('https://signed.url/photo.jpg'), delete: jest.fn() } as unknown as R2Service;
-    const useCase = new UploadStandalonePhotoUseCase(repo, petAccess, mapper, r2);
+    const useCase = new UploadStandalonePhotoUseCase(repo, petAccess, mapper, r2, makeLimitService());
 
     const result = await useCase.execute({
       userId: 'user-1',
@@ -73,7 +82,7 @@ describe('UploadStandalonePhotoUseCase', () => {
     const mapper = makeMapper();
     const petAccess = { assertCanAccess: jest.fn().mockRejectedValue(new ForbiddenError()) } as unknown as PetAccessService;
     const r2 = { upload: jest.fn(), getSignedUrl: jest.fn(), delete: jest.fn() } as unknown as R2Service;
-    const useCase = new UploadStandalonePhotoUseCase(repo, petAccess, mapper, r2);
+    const useCase = new UploadStandalonePhotoUseCase(repo, petAccess, mapper, r2, makeLimitService());
 
     await expect(
       useCase.execute({ userId: 'user-99', petId: 'pet-1', buffer: Buffer.from('x'), mimeType: 'image/jpeg', takenAt: '2026-04-30' }),

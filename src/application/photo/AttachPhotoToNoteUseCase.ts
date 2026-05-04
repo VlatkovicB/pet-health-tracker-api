@@ -8,6 +8,7 @@ import { R2Service } from '../../infrastructure/storage/R2Service';
 import { NoteRepository, NOTE_REPOSITORY } from '../../domain/note/NoteRepository';
 import { NotFoundError, ValidationError } from '../../shared/errors/AppError';
 import { UniqueEntityId } from '../../domain/shared/UniqueEntityId';
+import { LimitService } from '../limits/LimitService';
 
 export interface AttachPhotoToNoteInput {
   userId: string;
@@ -27,6 +28,7 @@ export class AttachPhotoToNoteUseCase {
     private readonly petAccessService: PetAccessService,
     private readonly mapper: PhotoMapper,
     private readonly r2: R2Service,
+    private readonly limitService: LimitService,
   ) {}
 
   async execute(input: AttachPhotoToNoteInput): Promise<PhotoResponseDto> {
@@ -36,6 +38,7 @@ export class AttachPhotoToNoteUseCase {
       throw new ValidationError(`Pet ${input.petId} is not associated with this note`);
     }
     const pet = await this.petAccessService.assertCanAccess(input.petId, input.userId, 'edit_photos');
+    await this.limitService.checkStorageLimit(input.userId, input.buffer.length);
     const ext = input.mimeType.split('/')[1] ?? 'jpg';
     const s3Key = `photos/${uuidv4()}.${ext}`;
     await this.r2.upload(s3Key, input.buffer, input.mimeType);
@@ -47,8 +50,10 @@ export class AttachPhotoToNoteUseCase {
       caption: input.caption,
       sourceType: 'note',
       sourceId: input.noteId,
+      sizeBytes: input.buffer.length,
     }, new UniqueEntityId());
     const saved = await this.repo.save(photo);
+    await this.limitService.incrementStorage(input.userId, input.buffer.length);
     const url = await this.r2.getSignedUrl(saved.s3Key);
     return this.mapper.toResponse(saved, url);
   }

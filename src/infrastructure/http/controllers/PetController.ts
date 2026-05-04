@@ -11,6 +11,7 @@ import { authMiddleware, AuthPayload } from '../middleware/authMiddleware';
 import { uploadPetPhoto, validateImageBuffer } from '../middleware/upload';
 import { AppError } from '../../../shared/errors/AppError';
 import { R2Service } from '../../storage/R2Service';
+import { LimitService } from '../../../application/limits/LimitService';
 import { Validate } from '../decorators/Validate';
 import {
   CreatePetSchema, CreatePetBody,
@@ -29,6 +30,7 @@ export class PetController {
     private readonly updatePet: UpdatePetUseCase,
     private readonly mapper: PetMapper,
     private readonly r2: R2Service,
+    private readonly limitService: LimitService,
   ) {}
 
   @Get('/')
@@ -70,10 +72,12 @@ export class PetController {
   @UseBefore(uploadPetPhoto.single('photo'))
   async uploadPhoto(@Param('petId') petId: string, @Req() req: Request, @CurrentUser() user: AuthPayload) {
     if (!req.file) throw new AppError('No file uploaded', 400);
+    await this.limitService.checkStorageLimit(user.userId, req.file.buffer.length);
     const mimeType = validateImageBuffer(req.file.buffer);
     const ext = mimeType.split('/')[1] ?? 'jpg';
     const s3Key = `pets/${uuidv4()}.${ext}`;
     await this.r2.upload(s3Key, req.file.buffer, mimeType);
+    await this.limitService.incrementStorage(user.userId, req.file.buffer.length);
     const photoUrl = await this.r2.getSignedUrl(s3Key);
     const pet = await this.updatePet.execute({ petId, photoUrl, requestingUserId: user.userId });
     return this.mapper.toResponse(pet);

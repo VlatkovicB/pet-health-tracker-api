@@ -12,7 +12,7 @@ import { ForbiddenError } from '../../../src/shared/errors/AppError';
 
 function makePhoto(takenAt: string): Photo {
   return Photo.reconstitute(
-    { petId: 'pet-1', ownerId: 'user-1', s3Key: 'photos/abc.jpg', takenAt, caption: undefined, sourceType: 'standalone', sourceId: undefined, createdAt: new Date() },
+    { petId: 'pet-1', ownerId: 'user-1', s3Key: 'photos/abc.jpg', takenAt, caption: undefined, sourceType: 'standalone', sourceId: undefined, sizeBytes: 0, createdAt: new Date() },
     new UniqueEntityId('photo-1'),
   );
 }

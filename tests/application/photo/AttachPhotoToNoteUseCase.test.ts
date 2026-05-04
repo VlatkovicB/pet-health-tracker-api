@@ -10,6 +10,15 @@ import { Pet } from '../../../src/domain/pet/Pet';
 import { Note } from '../../../src/domain/note/Note';
 import { UniqueEntityId } from '../../../src/domain/shared/UniqueEntityId';
 import { ForbiddenError, NotFoundError, ValidationError } from '../../../src/shared/errors/AppError';
+import { LimitService } from '../../../src/application/limits/LimitService';
+
+function makeLimitService(): jest.Mocked<LimitService> {
+  return {
+    checkStorageLimit: jest.fn().mockResolvedValue(undefined),
+    incrementStorage: jest.fn().mockResolvedValue(undefined),
+    decrementStorage: jest.fn().mockResolvedValue(undefined),
+  } as unknown as jest.Mocked<LimitService>;
+}
 
 function makePet(): Pet {
   return Pet.reconstitute(
@@ -80,7 +89,7 @@ describe('AttachPhotoToNoteUseCase', () => {
       delete: jest.fn(),
     } as unknown as R2Service;
 
-    const useCase = new AttachPhotoToNoteUseCase(repo, noteRepo, petAccess, mapper, r2);
+    const useCase = new AttachPhotoToNoteUseCase(repo, noteRepo, petAccess, mapper, r2, makeLimitService());
 
     const result = await useCase.execute({
       userId: 'user-1',
@@ -111,7 +120,7 @@ describe('AttachPhotoToNoteUseCase', () => {
     const petAccess = { assertCanAccess: jest.fn() } as unknown as PetAccessService;
     const r2 = { upload: jest.fn(), getSignedUrl: jest.fn(), delete: jest.fn() } as unknown as R2Service;
 
-    const useCase = new AttachPhotoToNoteUseCase(repo, noteRepo, petAccess, mapper, r2);
+    const useCase = new AttachPhotoToNoteUseCase(repo, noteRepo, petAccess, mapper, r2, makeLimitService());
 
     await expect(
       useCase.execute({ userId: 'user-1', noteId: 'nonexistent', petId: 'pet-1', buffer: Buffer.from('x'), mimeType: 'image/jpeg', takenAt: '2026-04-15' }),
@@ -133,7 +142,7 @@ describe('AttachPhotoToNoteUseCase', () => {
     const petAccess = { assertCanAccess: jest.fn().mockRejectedValue(new ForbiddenError()) } as unknown as PetAccessService;
     const r2 = { upload: jest.fn(), getSignedUrl: jest.fn(), delete: jest.fn() } as unknown as R2Service;
 
-    const useCase = new AttachPhotoToNoteUseCase(repo, noteRepo, petAccess, mapper, r2);
+    const useCase = new AttachPhotoToNoteUseCase(repo, noteRepo, petAccess, mapper, r2, makeLimitService());
 
     await expect(
       useCase.execute({ userId: 'user-99', noteId: 'note-1', petId: 'pet-1', buffer: Buffer.from('x'), mimeType: 'image/jpeg', takenAt: '2026-04-15' }),
@@ -155,7 +164,7 @@ describe('AttachPhotoToNoteUseCase', () => {
     const petAccess = { assertCanAccess: jest.fn() } as unknown as PetAccessService;
     const r2 = { upload: jest.fn(), getSignedUrl: jest.fn(), delete: jest.fn() } as unknown as R2Service;
 
-    const useCase = new AttachPhotoToNoteUseCase(repo, noteRepo, petAccess, mapper, r2);
+    const useCase = new AttachPhotoToNoteUseCase(repo, noteRepo, petAccess, mapper, r2, makeLimitService());
 
     await expect(
       useCase.execute({ userId: 'user-1', noteId: 'note-1', petId: 'pet-99', buffer: Buffer.from('x'), mimeType: 'image/jpeg', takenAt: '2026-04-15' }),
@@ -183,7 +192,7 @@ describe('AttachPhotoToNoteUseCase', () => {
       delete: jest.fn(),
     } as unknown as R2Service;
 
-    const useCase = new AttachPhotoToNoteUseCase(repo, noteRepo, petAccess, mapper, r2);
+    const useCase = new AttachPhotoToNoteUseCase(repo, noteRepo, petAccess, mapper, r2, makeLimitService());
 
     // user-2 is not note.userId but has edit_photos via group share
     const result = await useCase.execute({

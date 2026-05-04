@@ -10,6 +10,15 @@ import { Pet } from '../../../src/domain/pet/Pet';
 import { VetVisit } from '../../../src/domain/health/VetVisit';
 import { UniqueEntityId } from '../../../src/domain/shared/UniqueEntityId';
 import { ForbiddenError, NotFoundError } from '../../../src/shared/errors/AppError';
+import { LimitService } from '../../../src/application/limits/LimitService';
+
+function makeLimitService(): jest.Mocked<LimitService> {
+  return {
+    checkStorageLimit: jest.fn().mockResolvedValue(undefined),
+    incrementStorage: jest.fn().mockResolvedValue(undefined),
+    decrementStorage: jest.fn().mockResolvedValue(undefined),
+  } as unknown as jest.Mocked<LimitService>;
+}
 
 function makePet(): Pet {
   return Pet.reconstitute(
@@ -42,6 +51,7 @@ function makePhoto(): Photo {
       caption: undefined,
       sourceType: 'vet-visit',
       sourceId: 'visit-1',
+      sizeBytes: 0,
       createdAt: new Date(),
     },
     new UniqueEntityId('photo-1'),
@@ -103,7 +113,7 @@ describe('AttachPhotoToVisitUseCase', () => {
       delete: jest.fn(),
     } as unknown as R2Service;
 
-    const useCase = new AttachPhotoToVisitUseCase(repo, healthRepo, petAccess, mapper, r2);
+    const useCase = new AttachPhotoToVisitUseCase(repo, healthRepo, petAccess, mapper, r2, makeLimitService());
 
     const result = await useCase.execute({
       userId: 'user-1',
@@ -139,7 +149,7 @@ describe('AttachPhotoToVisitUseCase', () => {
     const petAccess = { assertCanAccess: jest.fn() } as unknown as PetAccessService;
     const r2 = { upload: jest.fn(), getSignedUrl: jest.fn(), delete: jest.fn() } as unknown as R2Service;
 
-    const useCase = new AttachPhotoToVisitUseCase(repo, healthRepo, petAccess, mapper, r2);
+    const useCase = new AttachPhotoToVisitUseCase(repo, healthRepo, petAccess, mapper, r2, makeLimitService());
 
     await expect(
       useCase.execute({ userId: 'user-1', visitId: 'nonexistent', buffer: Buffer.from('x'), mimeType: 'image/jpeg', takenAt: '2026-04-15' }),
@@ -167,7 +177,7 @@ describe('AttachPhotoToVisitUseCase', () => {
     const petAccess = { assertCanAccess: jest.fn().mockRejectedValue(new ForbiddenError()) } as unknown as PetAccessService;
     const r2 = { upload: jest.fn(), getSignedUrl: jest.fn(), delete: jest.fn() } as unknown as R2Service;
 
-    const useCase = new AttachPhotoToVisitUseCase(repo, healthRepo, petAccess, mapper, r2);
+    const useCase = new AttachPhotoToVisitUseCase(repo, healthRepo, petAccess, mapper, r2, makeLimitService());
 
     await expect(
       useCase.execute({ userId: 'user-99', visitId: 'visit-1', buffer: Buffer.from('x'), mimeType: 'image/jpeg', takenAt: '2026-04-15' }),

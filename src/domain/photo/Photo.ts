@@ -11,6 +11,7 @@ interface PhotoProps {
   caption?: string;
   sourceType: PhotoSourceType;
   sourceId?: string;
+  sizeBytes: number;
   createdAt: Date;
 }
 
@@ -22,10 +23,11 @@ export class Photo extends Entity<PhotoProps> {
   get caption(): string | undefined { return this.props.caption; }
   get sourceType(): PhotoSourceType { return this.props.sourceType; }
   get sourceId(): string | undefined { return this.props.sourceId; }
+  get sizeBytes(): number { return this.props.sizeBytes; }
   get createdAt(): Date { return this.props.createdAt; }
 
-  static create(props: Omit<PhotoProps, 'createdAt'>, id?: UniqueEntityId): Photo {
-    return new Photo({ ...props, createdAt: new Date() }, id);
+  static create(props: Omit<PhotoProps, 'createdAt' | 'sizeBytes'> & { sizeBytes?: number }, id?: UniqueEntityId): Photo {
+    return new Photo({ ...props, sizeBytes: props.sizeBytes ?? 0, createdAt: new Date() }, id);
   }
 
   static reconstitute(props: PhotoProps, id: UniqueEntityId): Photo {

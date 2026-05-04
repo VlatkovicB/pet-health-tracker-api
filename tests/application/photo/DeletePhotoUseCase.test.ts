@@ -7,10 +7,11 @@ import { Photo } from '../../../src/domain/photo/Photo';
 import { Pet } from '../../../src/domain/pet/Pet';
 import { UniqueEntityId } from '../../../src/domain/shared/UniqueEntityId';
 import { ForbiddenError, NotFoundError } from '../../../src/shared/errors/AppError';
+import { LimitService } from '../../../src/application/limits/LimitService';
 
 function makePhoto(ownerId: string): Photo {
   return Photo.reconstitute(
-    { petId: 'pet-1', ownerId, s3Key: 'photos/abc.jpg', takenAt: '2026-04-30', caption: undefined, sourceType: 'standalone', sourceId: undefined, createdAt: new Date() },
+    { petId: 'pet-1', ownerId, s3Key: 'photos/abc.jpg', takenAt: '2026-04-30', caption: undefined, sourceType: 'standalone', sourceId: undefined, sizeBytes: 1024, createdAt: new Date() },
     new UniqueEntityId('photo-1'),
   );
 }
@@ -22,6 +23,14 @@ function makePet(userId: string): Pet {
   );
 }
 
+function makeLimitService(): jest.Mocked<LimitService> {
+  return {
+    checkStorageLimit: jest.fn().mockResolvedValue(undefined),
+    incrementStorage: jest.fn().mockResolvedValue(undefined),
+    decrementStorage: jest.fn().mockResolvedValue(undefined),
+  } as unknown as jest.Mocked<LimitService>;
+}
+
 describe('DeletePhotoUseCase', () => {
   it('deletes photo from R2 and DB when user has edit_photos access', async () => {
     const repo: jest.Mocked<PhotoRepository> = {
@@ -30,7 +39,8 @@ describe('DeletePhotoUseCase', () => {
     };
     const petAccess = { assertCanAccess: jest.fn().mockResolvedValue(makePet('user-1')) } as unknown as PetAccessService;
     const r2 = { upload: jest.fn(), getSignedUrl: jest.fn(), delete: jest.fn().mockResolvedValue(undefined) } as unknown as R2Service;
-    const useCase = new DeletePhotoUseCase(repo, petAccess, r2);
+    const limitService = makeLimitService();
+    const useCase = new DeletePhotoUseCase(repo, petAccess, r2, limitService);
 
     await useCase.execute({ userId: 'user-1', photoId: 'photo-1' });
 
@@ -46,7 +56,7 @@ describe('DeletePhotoUseCase', () => {
     };
     const petAccess = { assertCanAccess: jest.fn() } as unknown as PetAccessService;
     const r2 = { upload: jest.fn(), getSignedUrl: jest.fn(), delete: jest.fn() } as unknown as R2Service;
-    const useCase = new DeletePhotoUseCase(repo, petAccess, r2);
+    const useCase = new DeletePhotoUseCase(repo, petAccess, r2, makeLimitService());
 
     await expect(useCase.execute({ userId: 'user-1', photoId: 'photo-99' })).rejects.toThrow(NotFoundError);
     expect(r2.delete).not.toHaveBeenCalled();
@@ -59,7 +69,7 @@ describe('DeletePhotoUseCase', () => {
     };
     const petAccess = { assertCanAccess: jest.fn().mockRejectedValue(new ForbiddenError()) } as unknown as PetAccessService;
     const r2 = { upload: jest.fn(), getSignedUrl: jest.fn(), delete: jest.fn() } as unknown as R2Service;
-    const useCase = new DeletePhotoUseCase(repo, petAccess, r2);
+    const useCase = new DeletePhotoUseCase(repo, petAccess, r2, makeLimitService());
 
     await expect(useCase.execute({ userId: 'user-99', photoId: 'photo-1' })).rejects.toThrow(ForbiddenError);
     expect(r2.delete).not.toHaveBeenCalled();

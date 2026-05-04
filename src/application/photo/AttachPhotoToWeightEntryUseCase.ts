@@ -8,6 +8,7 @@ import { R2Service } from '../../infrastructure/storage/R2Service';
 import { WeightEntryRepository, WEIGHT_ENTRY_REPOSITORY } from '../../domain/weight/WeightEntryRepository';
 import { NotFoundError } from '../../shared/errors/AppError';
 import { UniqueEntityId } from '../../domain/shared/UniqueEntityId';
+import { LimitService } from '../limits/LimitService';
 
 export interface AttachPhotoToWeightEntryInput {
   userId: string;
@@ -26,12 +27,14 @@ export class AttachPhotoToWeightEntryUseCase {
     private readonly petAccessService: PetAccessService,
     private readonly mapper: PhotoMapper,
     private readonly r2: R2Service,
+    private readonly limitService: LimitService,
   ) {}
 
   async execute(input: AttachPhotoToWeightEntryInput): Promise<PhotoResponseDto> {
     const entry = await this.weightEntryRepo.findById(input.weightEntryId);
     if (!entry) throw new NotFoundError('WeightEntry');
     const pet = await this.petAccessService.assertCanAccess(entry.petId, input.userId, 'edit_photos');
+    await this.limitService.checkStorageLimit(input.userId, input.buffer.length);
     const ext = input.mimeType.split('/')[1] ?? 'jpg';
     const s3Key = `photos/${uuidv4()}.${ext}`;
     await this.r2.upload(s3Key, input.buffer, input.mimeType);
@@ -43,8 +46,10 @@ export class AttachPhotoToWeightEntryUseCase {
       caption: input.caption,
       sourceType: 'weight-entry',
       sourceId: input.weightEntryId,
+      sizeBytes: input.buffer.length,
     }, new UniqueEntityId());
     const saved = await this.repo.save(photo);
+    await this.limitService.incrementStorage(input.userId, input.buffer.length);
     const url = await this.r2.getSignedUrl(saved.s3Key);
     return this.mapper.toResponse(saved, url);
   }

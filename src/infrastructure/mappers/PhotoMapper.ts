@@ -28,6 +28,7 @@ export class PhotoMapper {
         caption: model.caption ?? undefined,
         sourceType: model.sourceType,
         sourceId: model.sourceId ?? undefined,
+        sizeBytes: model.sizeBytes ?? 0,
         createdAt: model.createdAt,
       },
       new UniqueEntityId(model.id),
@@ -44,6 +45,7 @@ export class PhotoMapper {
       caption: photo.caption ?? null,
       sourceType: photo.sourceType,
       sourceId: photo.sourceId ?? null,
+      sizeBytes: photo.sizeBytes,
       createdAt: photo.createdAt,
     };
   }
