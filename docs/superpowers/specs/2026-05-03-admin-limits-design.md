@@ -116,7 +116,7 @@ Responsibilities:
 | `LogMedicationUseCase` | `maxMedications` — count user's medications |
 | `AddNoteUseCase` | `maxNotes` — count user's notes |
 | `AddVetVisitImageUseCase` | `maxStorageBytes` — `storageUsedBytes + newFileBytes` |
-| `UploadPetPhotoUseCase` | `maxStorageBytes` — same storage check |
+| `PetController.uploadPhoto` (inline, no use case today) | `maxStorageBytes` — same storage check |
 | `PlacesController` (search) | `maxPlacesSearchesMonthly` — monthly counter |
 
 Error response on limit hit: `403 Forbidden` with descriptive message (e.g., `"Pet limit reached (10/10)"`).
