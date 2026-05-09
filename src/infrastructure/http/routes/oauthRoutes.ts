@@ -15,8 +15,9 @@ function oauthCallback(provider: string) {
         return res.redirect(`${process.env.CLIENT_URL}/auth?error=server_error`);
       }
       if (!tokenObj) {
-        const code = info?.message ?? 'oauth_failed';
-        return res.redirect(`${process.env.CLIENT_URL}/auth?error=${code}`);
+        const ALLOWED_CODES = new Set(['oauth_email_missing', 'oauth_failed']);
+        const code = ALLOWED_CODES.has(info?.message) ? info.message : 'oauth_failed';
+        return res.redirect(`${process.env.CLIENT_URL}/auth?error=${encodeURIComponent(code)}`);
       }
       res.cookie('token', tokenObj.token, COOKIE_OPTIONS);
       res.redirect(`${process.env.CLIENT_URL}/`);
@@ -30,7 +31,7 @@ export function oauthRoutes(): Router {
   router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], session: false }));
   router.get('/google/callback', oauthCallback('google'));
 
-  router.get('/facebook', passport.authenticate('facebook', { scope: ['email'], session: false }));
+  router.get('/facebook', passport.authenticate('facebook', { scope: ['email', 'public_profile'], session: false }));
   router.get('/facebook/callback', oauthCallback('facebook'));
 
   router.get('/apple', passport.authenticate('apple', { session: false }));
