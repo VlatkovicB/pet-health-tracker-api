@@ -41,11 +41,7 @@ export class AuthController {
 
   @Post('/logout')
   logout(@Res() res: Response) {
-    res.clearCookie('token', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-    });
+    res.clearCookie('token', { httpOnly: true, secure: COOKIE_OPTIONS.secure, sameSite: 'strict' as const });
     return res.json({ ok: true });
   }
 }
