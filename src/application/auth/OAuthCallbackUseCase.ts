@@ -4,6 +4,7 @@ import { UserRepository, USER_REPOSITORY } from '../../domain/user/UserRepositor
 import { OAuthAccountRepository, OAUTH_ACCOUNT_REPOSITORY } from '../../domain/oauth/OAuthAccountRepository';
 import { OAuthAccount, OAuthProvider } from '../../domain/oauth/OAuthAccount';
 import { User } from '../../domain/user/User';
+import { NotFoundError } from '../../shared/errors/AppError';
 
 export interface OAuthCallbackInput {
   provider: OAuthProvider;
@@ -29,6 +30,7 @@ export class OAuthCallbackUseCase {
 
     if (existingAccount) {
       user = await this.userRepo.findById(existingAccount.userId);
+      if (!user) throw new NotFoundError('User');
     } else {
       // Auto-link by email — skip for Apple private relay addresses
       const isAppleRelay = input.email?.endsWith('@privaterelay.appleid.com') ?? false;
