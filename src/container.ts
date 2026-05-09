@@ -11,6 +11,7 @@ import { SequelizeWeightEntryRepository } from './infrastructure/db/repositories
 import { SequelizePhotoRepository } from './infrastructure/db/repositories/SequelizePhotoRepository';
 import { SequelizeUserLimitsRepository } from './infrastructure/db/repositories/SequelizeUserLimitsRepository';
 import { SequelizeAdminStatsRepository } from './infrastructure/db/repositories/SequelizeAdminStatsRepository';
+import { SequelizeOAuthAccountRepository } from './infrastructure/db/repositories/SequelizeOAuthAccountRepository';
 import { NOTE_REPOSITORY } from './domain/note/NoteRepository';
 import { PET_SHARE_REPOSITORY } from './domain/share/PetShareRepository';
 import { PET_OWNERSHIP_TRANSFER_REPOSITORY } from './domain/transfer/PetOwnershipTransferRepository';
@@ -23,6 +24,7 @@ import { WEIGHT_ENTRY_REPOSITORY } from './domain/weight/WeightEntryRepository';
 import { PHOTO_REPOSITORY } from './domain/photo/PhotoRepository';
 import { USER_LIMITS_REPOSITORY } from './domain/user/UserLimitsRepository';
 import { ADMIN_STATS_REPOSITORY } from './domain/admin/AdminStatsRepository';
+import { OAUTH_ACCOUNT_REPOSITORY } from './domain/oauth/OAuthAccountRepository';
 
 export function registerDependencies(): void {
   Container.set(USER_REPOSITORY, Container.get(SequelizeUserRepository));
@@ -37,4 +39,5 @@ export function registerDependencies(): void {
   Container.set(PHOTO_REPOSITORY, Container.get(SequelizePhotoRepository));
   Container.set(USER_LIMITS_REPOSITORY, Container.get(SequelizeUserLimitsRepository));
   Container.set(ADMIN_STATS_REPOSITORY, Container.get(SequelizeAdminStatsRepository));
+  Container.set(OAUTH_ACCOUNT_REPOSITORY, Container.get(SequelizeOAuthAccountRepository));
 }
