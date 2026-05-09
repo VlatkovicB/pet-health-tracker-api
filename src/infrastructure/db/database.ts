@@ -1,5 +1,6 @@
 import { Sequelize } from 'sequelize-typescript';
 import { UserModel } from './models/UserModel';
+import { OAuthAccountModel } from './models/OAuthAccountModel';
 import { PetModel } from './models/PetModel';
 import { VetModel } from './models/VetModel';
 import { VetWorkHoursModel } from './models/VetWorkHoursModel';
@@ -25,6 +26,7 @@ export const sequelize = new Sequelize({
   logging: false,
   models: [
     UserModel,
+    OAuthAccountModel,
     PetModel,
     VetModel,
     VetWorkHoursModel,
