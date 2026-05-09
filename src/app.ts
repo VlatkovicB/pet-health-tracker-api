@@ -48,8 +48,8 @@ export function createApp(): express.Application {
   app.use(express.json());
   app.use(cookieParser());
 
-  configurePassport();
   app.use(passport.initialize());
+  configurePassport();
   app.use('/api/v1/auth', oauthRoutes());
 
   useExpressServer(app, {

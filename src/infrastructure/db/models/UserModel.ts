@@ -1,5 +1,6 @@
 import { Column, DataType, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript';
 import { PetModel } from './PetModel';
+import { OAuthAccountModel } from './OAuthAccountModel';
 
 @Table({ tableName: 'users', timestamps: false })
 export class UserModel extends Model {
@@ -27,4 +28,7 @@ export class UserModel extends Model {
 
   @HasMany(() => PetModel)
   declare pets: PetModel[];
+
+  @HasMany(() => OAuthAccountModel, { onDelete: 'CASCADE' })
+  declare oauthAccounts: OAuthAccountModel[];
 }

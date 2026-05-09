@@ -2,6 +2,8 @@ import { Inject, Service } from 'typedi';
 import jwt from 'jsonwebtoken';
 import { UserRepository, USER_REPOSITORY } from '../../domain/user/UserRepository';
 import { OAuthAccountRepository, OAUTH_ACCOUNT_REPOSITORY } from '../../domain/oauth/OAuthAccountRepository';
+import { PetShareRepository, PET_SHARE_REPOSITORY } from '../../domain/share/PetShareRepository';
+import { PetOwnershipTransferRepository, PET_OWNERSHIP_TRANSFER_REPOSITORY } from '../../domain/transfer/PetOwnershipTransferRepository';
 import { OAuthAccount, OAuthProvider } from '../../domain/oauth/OAuthAccount';
 import { User } from '../../domain/user/User';
 import { NotFoundError } from '../../shared/errors/AppError';
@@ -18,6 +20,8 @@ export class OAuthCallbackUseCase {
   constructor(
     @Inject(USER_REPOSITORY) private readonly userRepo: UserRepository,
     @Inject(OAUTH_ACCOUNT_REPOSITORY) private readonly oauthRepo: OAuthAccountRepository,
+    @Inject(PET_SHARE_REPOSITORY) private readonly shareRepo: PetShareRepository,
+    @Inject(PET_OWNERSHIP_TRANSFER_REPOSITORY) private readonly transferRepo: PetOwnershipTransferRepository,
   ) {}
 
   async execute(input: OAuthCallbackInput): Promise<{ token: string }> {
@@ -45,6 +49,10 @@ export class OAuthCallbackUseCase {
           passwordHash: null,
         });
         await this.userRepo.save(user);
+        if (input.email) {
+          await this.shareRepo.linkInvitedUser(input.email, user.id.toValue());
+          await this.transferRepo.linkInvitedUser(input.email, user.id.toValue());
+        }
       }
 
       const newAccount = OAuthAccount.create({
