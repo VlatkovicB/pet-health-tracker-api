@@ -17,6 +17,7 @@ export class LoginUserUseCase {
     const user = await this.userRepository.findByEmail(input.email);
     if (!user) throw new UnauthorizedError('Invalid credentials');
 
+    if (!user.passwordHash) throw new UnauthorizedError('Invalid credentials');
     const valid = await bcrypt.compare(input.password, user.passwordHash);
     if (!valid) throw new UnauthorizedError('Invalid credentials');
 
