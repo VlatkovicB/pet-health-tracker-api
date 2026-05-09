@@ -7,7 +7,7 @@ export type ThemeMode = 'light' | 'dark';
 interface UserProps {
   name: string;
   email: string;
-  passwordHash: string;
+  passwordHash: string | null;
   theme: ThemeMode;
   role: UserRole;
   createdAt: Date;
@@ -16,7 +16,7 @@ interface UserProps {
 export class User extends AggregateRoot<UserProps> {
   get name(): string { return this.props.name; }
   get email(): string { return this.props.email; }
-  get passwordHash(): string { return this.props.passwordHash; }
+  get passwordHash(): string | null { return this.props.passwordHash; }
   get theme(): ThemeMode { return this.props.theme; }
   get role(): UserRole { return this.props.role; }
   get createdAt(): Date { return this.props.createdAt; }

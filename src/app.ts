@@ -6,6 +6,9 @@ import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { useExpressServer, useContainer } from 'routing-controllers';
 import { Container } from 'typedi';
+import passport from 'passport';
+import { configurePassport } from './infrastructure/http/middleware/passportConfig';
+import { oauthRoutes } from './infrastructure/http/routes/oauthRoutes';
 import { errorMiddleware } from './infrastructure/http/middleware/errorMiddleware';
 import { devRoutes } from './infrastructure/http/routes/devRoutes';
 
@@ -44,6 +47,10 @@ export function createApp(): express.Application {
   app.use('/api/v1/auth', authLimiter);
   app.use(express.json());
   app.use(cookieParser());
+
+  app.use(passport.initialize());
+  configurePassport();
+  app.use('/api/v1/auth', oauthRoutes());
 
   useExpressServer(app, {
     routePrefix: '/api/v1',
