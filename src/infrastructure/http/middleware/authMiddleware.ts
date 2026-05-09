@@ -18,12 +18,14 @@ declare global {
 }
 
 export function authMiddleware(req: Request, _res: Response, next: NextFunction): void {
-  const header = req.headers.authorization;
-  if (!header?.startsWith('Bearer ')) {
-    return next(new UnauthorizedError());
-  }
+  const token =
+    req.cookies?.token ??
+    (req.headers.authorization?.startsWith('Bearer ')
+      ? req.headers.authorization.slice(7)
+      : null);
 
-  const token = header.slice(7);
+  if (!token) return next(new UnauthorizedError());
+
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET!) as AuthPayload;
     req.auth = payload;

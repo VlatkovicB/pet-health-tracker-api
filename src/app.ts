@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { useExpressServer, useContainer } from 'routing-controllers';
 import { Container } from 'typedi';
@@ -40,8 +41,9 @@ export function createApp(): express.Application {
 
   app.use(helmet());
   app.use(cors({ origin: process.env.CLIENT_ORIGIN ?? 'http://localhost:5173', credentials: true }));
-  app.use(express.json());
   app.use('/api/v1/auth', authLimiter);
+  app.use(express.json());
+  app.use(cookieParser());
 
   useExpressServer(app, {
     routePrefix: '/api/v1',
