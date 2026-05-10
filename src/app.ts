@@ -45,7 +45,8 @@ export function createApp(): express.Application {
 
   app.use(helmet());
   app.use(cors({ origin: process.env.CLIENT_ORIGIN ?? 'http://localhost:5173', credentials: true }));
-  app.use('/api/v1/auth', authLimiter);
+  app.use('/api/v1/auth/login', authLimiter);
+  app.use('/api/v1/auth/register', authLimiter);
   app.use(express.json());
   app.use(cookieParser());
 
