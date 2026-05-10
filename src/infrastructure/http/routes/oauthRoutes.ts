@@ -76,7 +76,7 @@ export function oauthRoutes(): Router {
       }
 
       const confirmationCode = `fb-del-${facebookUserId}-${Date.now()}`;
-      const statusUrl = `${process.env.API_URL}/auth/facebook/deletion-status?id=${confirmationCode}`;
+      const statusUrl = `${process.env.API_URL}/api/v1/auth/facebook/deletion-status?id=${confirmationCode}`;
 
       return res.json({ url: statusUrl, confirmation_code: confirmationCode });
     } catch {
