@@ -26,7 +26,7 @@ function oauthCallback(provider: string) {
         return res.redirect(`${process.env.CLIENT_URL}/auth?error=${encodeURIComponent(code)}`);
       }
       console.log(`[OAuth:${provider}] success, redirecting to callback`);
-      res.redirect(`${process.env.CLIENT_URL}/auth/callback#token=${tokenObj.token}`);
+      res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${tokenObj.token}`);
     })(req, res, next);
   };
 }
