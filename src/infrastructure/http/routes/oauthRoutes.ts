@@ -1,5 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import passport from 'passport';
+import crypto from 'crypto';
+import { Container } from 'typedi';
+import { OAuthAccountRepository, OAUTH_ACCOUNT_REPOSITORY } from '../../../domain/oauth/OAuthAccountRepository';
+import { UserRepository, USER_REPOSITORY } from '../../../domain/user/UserRepository';
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -36,6 +40,53 @@ export function oauthRoutes(): Router {
 
   router.get('/apple', passport.authenticate('apple', { session: false }));
   router.post('/apple/callback', oauthCallback('apple'));
+
+  router.post('/facebook/data-deletion', async (req: Request, res: Response) => {
+    try {
+      const signedRequest: string = req.body?.signed_request;
+      if (!signedRequest) return res.status(400).json({ error: 'missing signed_request' });
+
+      const [encodedSig, encodedPayload] = signedRequest.split('.');
+      if (!encodedSig || !encodedPayload) return res.status(400).json({ error: 'invalid signed_request' });
+
+      const secret = process.env.FACEBOOK_APP_SECRET;
+      if (!secret) return res.status(500).json({ error: 'server misconfiguration' });
+
+      const expectedSig = crypto
+        .createHmac('sha256', secret)
+        .update(encodedPayload)
+        .digest('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+
+      if (!crypto.timingSafeEqual(Buffer.from(encodedSig), Buffer.from(expectedSig))) {
+        return res.status(403).json({ error: 'invalid signature' });
+      }
+
+      const payload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf8'));
+      const facebookUserId: string = payload.user_id;
+
+      const oauthRepo = Container.get<OAuthAccountRepository>(OAUTH_ACCOUNT_REPOSITORY);
+      const userRepo = Container.get<UserRepository>(USER_REPOSITORY);
+
+      const oauthAccount = await oauthRepo.findByProviderAndProviderId('facebook', facebookUserId);
+      if (oauthAccount) {
+        await userRepo.deleteById(oauthAccount.userId);
+      }
+
+      const confirmationCode = `fb-del-${facebookUserId}-${Date.now()}`;
+      const statusUrl = `${process.env.API_URL}/auth/facebook/deletion-status?id=${confirmationCode}`;
+
+      return res.json({ url: statusUrl, confirmation_code: confirmationCode });
+    } catch {
+      return res.status(500).json({ error: 'server_error' });
+    }
+  });
+
+  router.get('/facebook/deletion-status', (_req: Request, res: Response) => {
+    res.json({ status: 'deleted' });
+  });
 
   return router;
 }
