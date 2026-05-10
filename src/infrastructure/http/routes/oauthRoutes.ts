@@ -59,7 +59,9 @@ export function oauthRoutes(): Router {
         .replace(/\//g, '_')
         .replace(/=/g, '');
 
-      if (!crypto.timingSafeEqual(Buffer.from(encodedSig), Buffer.from(expectedSig))) {
+      const sigBuf = Buffer.from(encodedSig);
+      const expectedBuf = Buffer.from(expectedSig);
+      if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
         return res.status(403).json({ error: 'invalid signature' });
       }
 

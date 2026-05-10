@@ -48,6 +48,7 @@ export function createApp(): express.Application {
   app.use('/api/v1/auth/login', authLimiter);
   app.use('/api/v1/auth/register', authLimiter);
   app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
 
   app.use(passport.initialize());
