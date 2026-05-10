@@ -16,16 +16,13 @@ function oauthCallback(provider: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate(provider, { session: false }, (err: Error | null, tokenObj: { token: string } | false, info: any) => {
       if (err) {
-        console.error(`[OAuth:${provider}] error:`, err);
         return res.redirect(`${process.env.CLIENT_URL}/auth?error=server_error`);
       }
       if (!tokenObj) {
         const ALLOWED_CODES = new Set(['oauth_email_missing', 'oauth_failed']);
         const code = ALLOWED_CODES.has(info?.message) ? info.message : 'oauth_failed';
-        console.error(`[OAuth:${provider}] no token, info:`, info);
         return res.redirect(`${process.env.CLIENT_URL}/auth?error=${encodeURIComponent(code)}`);
       }
-      console.log(`[OAuth:${provider}] success, redirecting to callback`);
       res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${tokenObj.token}`);
     })(req, res, next);
   };
