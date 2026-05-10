@@ -6,11 +6,12 @@ import { LoginUserUseCase } from '../../../application/auth/LoginUserUseCase';
 import { Validate } from '../decorators/Validate';
 import { RegisterSchema, RegisterBody, LoginSchema, LoginBody } from '../schemas/authSchemas';
 
+const isProduction = process.env.NODE_ENV === 'production';
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  secure: isProduction,
+  sameSite: (isProduction ? 'none' : 'strict') as 'none' | 'strict',
+  maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
 @JsonController('/auth')
@@ -41,7 +42,7 @@ export class AuthController {
 
   @Post('/logout')
   logout(@Res() res: Response) {
-    res.clearCookie('token', { httpOnly: true, secure: COOKIE_OPTIONS.secure, sameSite: 'strict' as const });
+    res.clearCookie('token', { httpOnly: true, secure: COOKIE_OPTIONS.secure, sameSite: COOKIE_OPTIONS.sameSite });
     return res.json({ ok: true });
   }
 }

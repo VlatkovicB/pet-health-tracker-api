@@ -5,10 +5,11 @@ import { Container } from 'typedi';
 import { OAuthAccountRepository, OAUTH_ACCOUNT_REPOSITORY } from '../../../domain/oauth/OAuthAccountRepository';
 import { UserRepository, USER_REPOSITORY } from '../../../domain/user/UserRepository';
 
+const isProduction = process.env.NODE_ENV === 'production';
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
+  secure: isProduction,
+  sameSite: (isProduction ? 'none' : 'strict') as 'none' | 'strict',
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
