@@ -5,11 +5,10 @@ import { Container } from 'typedi';
 import { OAuthAccountRepository, OAUTH_ACCOUNT_REPOSITORY } from '../../../domain/oauth/OAuthAccountRepository';
 import { UserRepository, USER_REPOSITORY } from '../../../domain/user/UserRepository';
 
-const isProduction = process.env.NODE_ENV === 'production';
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: isProduction,
-  sameSite: (isProduction ? 'none' : 'strict') as 'none' | 'strict',
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict' as const,
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
@@ -24,8 +23,7 @@ function oauthCallback(provider: string) {
         const code = ALLOWED_CODES.has(info?.message) ? info.message : 'oauth_failed';
         return res.redirect(`${process.env.CLIENT_URL}/auth?error=${encodeURIComponent(code)}`);
       }
-      res.cookie('token', tokenObj.token, COOKIE_OPTIONS);
-      res.redirect(`${process.env.CLIENT_URL}/`);
+      res.redirect(`${process.env.CLIENT_URL}/auth/callback#token=${tokenObj.token}`);
     })(req, res, next);
   };
 }
